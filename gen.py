@@ -92,8 +92,8 @@ class MazeGenerator:
 
 
 
-WIDTH = 30
-HEIGHT = 30
+WIDTH = 5
+HEIGHT = 5
 
 motif =["#.#.###",
         "#.#...#",
