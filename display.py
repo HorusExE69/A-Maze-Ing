@@ -14,7 +14,6 @@ def parse_hex(nb: str) -> dict[str, bool]:
     return wall_positions
 
 
-
 def parse_file(file: IO) -> list[list[dict[str, bool]]]:
     data: list[list[dict[str, bool]]] = []
     for line in file:
@@ -29,11 +28,20 @@ def parse_file(file: IO) -> list[list[dict[str, bool]]]:
     return data
 
 
+def init_displayed_map(width, height) -> list[list[None | str]]:
+    displayed_map: list[list[None | str]] = []
+    for _ in range(width):
+        displayed_map.append([None for _ in range(height)])
+    return displayed_map
+
+
 def main() -> None:
     with open("test.txt", "r") as f:
         parsed_file = parse_file(f)
     for line in parsed_file:
-        print(line)
+        for dico in line:
+            print(dico)
+        print()
 
 
 if __name__ == "__main__":
