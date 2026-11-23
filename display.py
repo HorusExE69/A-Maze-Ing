@@ -1,4 +1,5 @@
 from typing import IO
+from constants import ANSI_CODE
 
 
 def parse_hex(nb: str) -> dict[str, bool]:
@@ -28,21 +29,33 @@ def parse_file(file: IO) -> list[list[dict[str, bool]]]:
     return data
 
 
-def init_displayed_map(width, height) -> list[list[None | str]]:
-    displayed_map: list[list[None | str]] = []
-    for _ in range(width):
-        displayed_map.append([None for _ in range(height)])
+def init_displayed_map(width, height) -> list[list[str]]:
+    displayed_map: list[list[str]] = []
+    for i in range(height):
+        if i == 0 or i == height - 1:
+            displayed_map.append(["#" for _ in range(width)])
+        else:
+            displayed_map.append(["#"] +
+                                 [" " for _ in range(width - 2)] +
+                                 ["#"])
     return displayed_map
 
 
-def main() -> None:
-    with open("test.txt", "r") as f:
-        parsed_file = parse_file(f)
-    for line in parsed_file:
-        for dico in line:
-            print(dico)
-        print()
+def fill_map(displayed_map: list[list[str]], hints: list[list[dict[str, bool]]]):
+    return displayed_map
+
+
+def display_map(filename: str) -> None:
+    with open(filename, "r") as f:
+        hints = parse_file(f)
+
+    height = len(hints) * 2 + 1
+    width = len(hints[0]) * 2 + 1
+    displayed_map = init_displayed_map(width, height)
+    displayed_map = fill_map(displayed_map, hints)
+    for row in displayed_map:
+        print(''.join(row))
 
 
 if __name__ == "__main__":
-    main()
+    display_map("test.txt")

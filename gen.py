@@ -1,6 +1,6 @@
 from sys import argv
 from random import choice, randint
-
+from display import display_map
 
 class MazeGenerator:
     def __init__(self, width, height, filename):
@@ -93,8 +93,8 @@ class MazeGenerator:
                     self.__grid[row][column] = 15
 
 
-WIDTH = 5
-HEIGHT = 5
+WIDTH = 10
+HEIGHT = 10
 
 motif = ["#.#.###",
          "#.#...#",
@@ -108,3 +108,5 @@ maze.grid_gen(motif)
 maze.entry_and_exit()
 maze.path_gen()
 maze.write_in_file()
+
+display_map(argv[1])
