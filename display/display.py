@@ -21,7 +21,7 @@ OFFSETS: dict[str, Point] = {
     "west": (-1, 0),
 }
 
-# Position
+# Positioning constants
 CORNERS: tuple[tuple[str, str], ...] = (
     ("north", "east"),
     ("east", "south"),
@@ -35,16 +35,46 @@ NEIGHBORS: tuple[Point, ...] = tuple(p for p in AROUND if p != (0, 0))
 
 
 def to_grid(x: int, y: int) -> Point:
+    """
+    Multiply each coordinate by 2 then add 1
+
+    Args:
+        x (int): x position of the cell
+        y (int): y position of the cell
+
+    Returns:
+        Point: new coordinates
+    """
     return x * 2 + 1, y * 2 + 1
 
 
 class Display:
     @staticmethod
     def parse_hex(nb: str) -> Cell:
+        """
+        Converts an hexadecimal string to int then create a dict with
+        available directions
+
+        Args:
+            nb (str): the hex to parse
+
+        Returns:
+            Cell: available directions
+        """
         value = int(nb, 16)
         return {name: bool(value & bit) for name, bit in WALL_BITS.items()}
 
     def parse_file(self, file: TextIO) -> list[list[Cell]]:
+        """
+        Read a file and parse each char to create a list with all
+        available direction in the seed
+
+        Args:
+            file (TextIO): The file to read
+
+        Returns:
+            list[list[Cell]]: The list of all available directions
+        """
         data: list[list[Cell]] = []
         for line in file:
             line = line.split("#", 1)[0].strip()
@@ -54,6 +84,17 @@ class Display:
 
     @staticmethod
     def is_surrounded_by_walls(grid: Grid, x: int, y: int) -> bool:
+        """
+        Check if the current cell is surrounded by walls
+
+        Args:
+            grid (Grid): the complete grid
+            y (int): the y coordinate of the current cell
+            x (int): the x coordinate of the current cell
+
+        Returns:
+            bool: return True if the cell is surrounded by walls
+        """
         return all(grid[y + dy][x + dx] == WALL_CHAR for dx, dy in NEIGHBORS)
 
     @staticmethod
