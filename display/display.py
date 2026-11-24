@@ -4,6 +4,7 @@ from ansi_code import get_ansi
 BORDER_CHAR = get_ansi("#", "black")
 WALL_CHAR = get_ansi("@", "black")
 MOTIF_CHAR = get_ansi("@", "red")
+PATH_CHAR = get_ansi("○", "blue")
 START_CHAR = get_ansi("S", "green")
 END_CHAR = get_ansi("E", "green")
 
@@ -227,6 +228,7 @@ class Display:
                 for name, (dx, dy) in OFFSETS.items():
                     if hint[name]:
                         self.grid[cy + dy][cx + dx] = WALL_CHAR
+                        break
 
                 # Diagonals
                 for a, b in CORNERS:
@@ -237,10 +239,23 @@ class Display:
                         dy = OFFSETS[a][1] + OFFSETS[b][1]
 
                         self.grid[cy + dy][cx + dx] = WALL_CHAR
+                        break
 
     def draw_path(self) -> None:
         """Draw the maze solution."""
-        pass
+        x, y = self.start
+        new_x, new_y = to_grid(x, y)
+        for char in self.path:
+            for i in range(2):
+                if char == 'S':
+                    new_y += 1
+                if char == 'N':
+                    new_y -= 1
+                if char == 'E':
+                    new_x += 1
+                if char == 'W':
+                    new_x -= 1
+                self.grid[new_y][new_x] = PATH_CHAR
 
     def draw_motif(self) -> None:
         """Paint motif's walls in red."""
@@ -272,8 +287,8 @@ class Display:
         self.init_displayed_map()
         self.fill_map()
         self.clean_map()
-        self.draw_path()
         self.draw_motif()
+        self.draw_path()
 
         for row in self.grid:
             print("".join(row))
