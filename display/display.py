@@ -35,16 +35,6 @@ OPPOSITE: dict[str, str] = {
     "west": "east",
 }
 
-# Positioning constants
-CORNERS: tuple[tuple[str, str], ...] = (
-    ("north", "east"),
-    ("east", "south"),
-    ("south", "west"),
-    ("west", "north"),
-    ("west", "east"),
-    ("south", "north"),
-)
-
 AROUND: tuple[Point, ...] = tuple(
     (dx, dy) for dy in (-1, 0, 1) for dx in (-1, 0, 1))
 
@@ -203,21 +193,6 @@ class Display:
         self.grid[sy][sx] = START_CHAR
         self.grid[ey][ex] = END_CHAR
 
-    def clean_map(self) -> None:
-        """Replace cells surrounded by walls."""
-        for y in range(1, len(self.grid) - 1):
-            for x in range(1, len(self.grid[y]) - 1):
-                if self.grid[y][x] in (
-                    BORDER_CHAR,
-                    WALL_CHAR,
-                    START_CHAR,
-                    END_CHAR,
-                ):
-                    continue
-
-                if self.is_surrounded_by_walls(x, y):
-                    self.grid[y][x] = WALL_CHAR
-
     def fill_map(self) -> None:
         """Fill the grid with the parsed seed."""
         for y, row in enumerate(self.hints):
@@ -228,17 +203,15 @@ class Display:
                 for name, (dx, dy) in OFFSETS.items():
                     if hint[name]:
                         self.grid[cy + dy][cx + dx] = WALL_CHAR
-                        break
 
-                # Diagonals
-                for a, b in CORNERS:
-                    if self.grid[cy][cx] != ' ':
+        for y in range(0, self.height, 2):
+            for x in range(0, self.width, 2):
+                for dx, dy in OFFSETS.values():
+                    if not (0 <= y + dy < self.height and
+                            0 <= x + dx < self.width):
                         continue
-                    if hint[a] and hint[b]:
-                        dx = OFFSETS[a][0] + OFFSETS[b][0]
-                        dy = OFFSETS[a][1] + OFFSETS[b][1]
-
-                        self.grid[cy + dy][cx + dx] = WALL_CHAR
+                    if self.grid[y + dy][x + dx] == WALL_CHAR:
+                        self.grid[y][x] = WALL_CHAR
                         break
 
     def draw_path(self) -> None:
@@ -255,7 +228,8 @@ class Display:
                     new_x += 1
                 if char == 'W':
                     new_x -= 1
-                self.grid[new_y][new_x] = PATH_CHAR
+                if self.grid[new_y][new_x] != END_CHAR:
+                    self.grid[new_y][new_x] = PATH_CHAR
 
     def draw_motif(self) -> None:
         """Paint motif's walls in red."""
@@ -286,7 +260,6 @@ class Display:
         self.validate_hints()
         self.init_displayed_map()
         self.fill_map()
-        self.clean_map()
         self.draw_motif()
         self.draw_path()
 
