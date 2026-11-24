@@ -4,7 +4,7 @@ from display import display_map
 
 
 class MazeGenerator:
-    def __init__(self, width, height, filename):
+    def __init__(self, width = 50, height = 50, filename = "maze.txt"):
         self.__width = width
         self.__height = height
         self.__grid = []
@@ -12,6 +12,7 @@ class MazeGenerator:
         self.__entry = [0, 0]
         self.__end = [height - 1, width - 1]
         self.__filename = filename
+        self.__perfect = True
 
     def grid_gen(self, motif):
 
@@ -59,6 +60,11 @@ class MazeGenerator:
                                 for valeur in self.__grid[i]))
                 f.write('\n')
 
+    def write_eof(self):
+        with open(self.__filename, "a", encoding = "utf-8") as f:
+            f.write(f"{self.__entry[0]},{self.__entry[1]}\n")
+            f.write(f"{self.__end[0]},{self.__end[1]}\n")
+
     def path_gen(self):
         stack = [list(self.__entry)]
 
@@ -101,11 +107,42 @@ class MazeGenerator:
                     coords.append((x, y))
         return coords
 
+    def parse_config(self, filename) :
+        with open(filename, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+        kept = []
+        for l in lines:
+            if l[0].isupper():
+                kept.append(l[:-1])
+        lines = kept
+        for l in lines:
+            if l.split('=')[0] == "WIDTH":
+                self.__width = int(l[6:])
+            elif l.split('=')[0] == "HEIGHT":
+                self.__height = int(l[7:])
+            elif l.split('=')[0] == "ENTRY":
+                self.__entry = [int(l[6:].split(",")[0]), int(l[6:].split(",")[1])]
+            elif l.split('=')[0] == "EXIT":
+                self.__end = [int(l[5:].split(",")[0]), int(l[5:].split(",")[1])]
+            elif l.split('=')[0] == "OUTPUT_FILE":
+                self.__filename = l[12:]
+            elif l.split('=')[0] == "PERFECT":
+                self.__perfect = l[8:] == "True"
+            else:
+                print(f"Unknown configuration option: {l}")
 
-WIDTH = 10
-HEIGHT = 10
-START_POS = (0, 0)
-END_POS = (WIDTH - 1, HEIGHT - 1)
+
+    # Getters
+    def get_width(self):
+        return self.__width
+
+    def get_height(self):
+        return self.__height
+
+    def get_file(self):
+        return self.__filename
+
+
 
 motif = ["#.#.###",
          "#.#...#",
@@ -114,11 +151,16 @@ motif = ["#.#.###",
          "..#.###"
          ]
 
-maze = MazeGenerator(WIDTH, HEIGHT, argv[1])
+maze = MazeGenerator()
+maze.parse_config(argv[1])
 maze.grid_gen(motif)
 motif_coords = maze.get_motif_coords()
 maze.entry_and_exit()
 maze.path_gen()
 maze.write_in_file()
 
-display_map(argv[1], START_POS, END_POS, motif_coords)
+START_POS = (0, 0)
+END_POS = (maze.get_width() - 1, maze.get_height() - 1)
+display_map(maze.get_file(), START_POS, END_POS, motif_coords)
+
+maze.write_eof()
