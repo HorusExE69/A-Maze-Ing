@@ -1,149 +1,121 @@
-from typing import IO
-from constants import WALL_CHAR, MOTIF_CHAR, START_CHAR, END_CHAR
+from typing import TextIO
+from ansi_code import get_ansi
 
+# Char constants
+WALL_CHAR = get_ansi('@', "black")
+MOTIF_CHAR = get_ansi('@', "red")
+START_CHAR = get_ansi('S', "green")
+END_CHAR = get_ansi('E', "green")
+
+# Types definitions
+Cell = dict[str, bool]
+Grid = list[list[str]]
+Point = tuple[int, int]
+
+# Directions Constants
+WALL_BITS: dict[str, int] = {"north": 1, "east": 2, "south": 4, "west": 8}
+OFFSETS: dict[str, Point] = {
+    "north": (0, -1),
+    "east": (1, 0),
+    "south": (0, 1),
+    "west": (-1, 0),
+}
+
+# Position
+CORNERS: tuple[tuple[str, str], ...] = (
+    ("north", "east"),
+    ("east", "south"),
+    ("south", "west"),
+    ("west", "north"),
+)
+AROUND: tuple[Point, ...] = tuple(
+    (dx, dy) for dy in (-1, 0, 1) for dx in (-1, 0, 1)
+)
+NEIGHBORS: tuple[Point, ...] = tuple(p for p in AROUND if p != (0, 0))
+
+
+def to_grid(x: int, y: int) -> Point:
+    return x * 2 + 1, y * 2 + 1
 
 
 class Display:
-    def __init__(self) -> None:
-        pass
-
-    def is_surrounded_by_walls(self, displayed_map, x, y):
-        for dy in (-1, 0, 1):
-            for dx in (-1, 0, 1):
-                if dx == 0 and dy == 0:
-                    continue
-
-                if displayed_map[y + dy][x + dx] != WALL_CHAR:
-                    return False
-
-        return True
-
-
-    def parse_hex(self, nb: str) -> dict[str, bool]:
+    @staticmethod
+    def parse_hex(nb: str) -> Cell:
         value = int(nb, 16)
+        return {name: bool(value & bit) for name, bit in WALL_BITS.items()}
 
-        wall_positions = {
-            "north": bool(value & 1),
-            "east": bool(value & 2),
-            "south": bool(value & 4),
-            "west": bool(value & 8),
-        }
-
-        return wall_positions
-
-
-    def parse_file(self, file: IO) -> list[list[dict[str, bool]]]:
-        data: list[list[dict[str, bool]]] = []
+    def parse_file(self, file: TextIO) -> list[list[Cell]]:
+        data: list[list[Cell]] = []
         for line in file:
-            data_line: list[dict[str, bool]] = []
-            for char in line:
-                if char == '#':
-                    break
-                if (char != '\n'):
-                    data_line.append(self.parse_hex(char))
-            if (len(data_line) > 0):
-                data.append(data_line)
+            line = line.split("#", 1)[0].strip()
+            if line:
+                data.append([self.parse_hex(char) for char in line])
         return data
 
+    @staticmethod
+    def is_surrounded_by_walls(grid: Grid, x: int, y: int) -> bool:
+        return all(grid[y + dy][x + dx] == WALL_CHAR for dx, dy in NEIGHBORS)
 
-    def init_displayed_map(self, width, height, start, end) -> list[list[str]]:
-        displayed_map: list[list[str]] = []
-        for i in range(height):
-            if i == 0 or i == height - 1:
-                displayed_map.append([WALL_CHAR for _ in range(width)])
-            else:
-                displayed_map.append([WALL_CHAR] +
-                                    [' ' for _ in range(width - 2)] +
-                                    [WALL_CHAR])
-        displayed_map[start[1] * 2 + 1][start[0] * 2 + 1] = START_CHAR
-        displayed_map[end[1] * 2 + 1][end[0] * 2 + 1] = END_CHAR
-        return displayed_map
+    @staticmethod
+    def init_displayed_map(width: int, height: int,
+                           start: Point, end: Point) -> Grid:
+        grid: Grid = [
+            [WALL_CHAR] * width if y in (0, height - 1)
+            else [WALL_CHAR] + [" "] * (width - 2) + [WALL_CHAR]
+            for y in range(height)
+        ]
+        sx, sy = to_grid(*start)
+        ex, ey = to_grid(*end)
+        grid[sy][sx] = START_CHAR
+        grid[ey][ex] = END_CHAR
+        return grid
 
-
-    def clean_map(self, displayed_map: list[list[str]]) -> list[list[str]]:
-        for y in range(1, len(displayed_map) - 1):
-            for x in range(1, len(displayed_map[y]) - 1):
-                if displayed_map[y][x] == WALL_CHAR:
+    def clean_map(self, grid: Grid) -> Grid:
+        for y in range(1, len(grid) - 1):
+            for x in range(1, len(grid[y]) - 1):
+                if grid[y][x] in (WALL_CHAR, START_CHAR, END_CHAR):
                     continue
-                if displayed_map[y][x] in (START_CHAR,
-                                        END_CHAR):
-                    continue
-                if self.is_surrounded_by_walls(displayed_map, x, y):
-                    displayed_map[y][x] = WALL_CHAR
-        return displayed_map
+                if self.is_surrounded_by_walls(grid, x, y):
+                    grid[y][x] = WALL_CHAR
+        return grid
 
+    @staticmethod
+    def fill_map(grid: Grid, hints: list[list[Cell]]) -> Grid:
+        for y, row in enumerate(hints):
+            for x, hint in enumerate(row):
+                cx, cy = to_grid(x, y)
 
-    def fill_map(self, displayed_map: list[list[str]],
-                hints: list[list[dict[str, bool]]]):
-        for y in range(len(hints)):
-            for x in range(len(hints[y])):
-                current_pos = {"x": x * 2 + 1, "y": y * 2 + 1}
-                current_hint = hints[y][x]
-
-                # Sides
-                if (current_hint["north"]):
-                    displayed_map[
-                        current_pos["y"] - 1][
-                        current_pos["x"]] = WALL_CHAR
-                if (current_hint["east"]):
-                    displayed_map[
-                        current_pos["y"]][
-                        current_pos["x"] + 1] = WALL_CHAR
-                if (current_hint["south"]):
-                    displayed_map[
-                        current_pos["y"] + 1][
-                        current_pos["x"]] = WALL_CHAR
-                if (current_hint["west"]):
-                    displayed_map[
-                        current_pos["y"]][
-                        current_pos["x"] - 1] = WALL_CHAR
+                # Côtés
+                for name, (dx, dy) in OFFSETS.items():
+                    if hint[name]:
+                        grid[cy + dy][cx + dx] = WALL_CHAR
 
                 # Diagonales
-                if (current_hint["north"] and current_hint["east"]):
-                    displayed_map[
-                        current_pos["y"] - 1][
-                        current_pos["x"] + 1] = WALL_CHAR
-                if (current_hint["east"] and current_hint["south"]):
-                    displayed_map[
-                        current_pos["y"] + 1][
-                        current_pos["x"] + 1] = WALL_CHAR
-                if (current_hint["south"] and current_hint["west"]):
-                    displayed_map[
-                        current_pos["y"] + 1][
-                        current_pos["x"] - 1] = WALL_CHAR
-                if (current_hint["west"] and current_hint["north"]):
-                    displayed_map[
-                        current_pos["y"] - 1][
-                        current_pos["x"] - 1] = WALL_CHAR
-        return displayed_map
+                for a, b in CORNERS:
+                    if hint[a] and hint[b]:
+                        dx = OFFSETS[a][0] + OFFSETS[b][0]
+                        dy = OFFSETS[a][1] + OFFSETS[b][1]
+                        grid[cy + dy][cx + dx] = WALL_CHAR
+        return grid
 
-
-    def draw_motif(self, displayed_map: list[list[str]],
-                motif_coords: list[tuple[int, int]]) -> list[list[str]]:
+    @staticmethod
+    def draw_motif(grid: Grid, motif_coords: list[Point]) -> Grid:
         for x, y in motif_coords:
-            current_pos = {"x": x * 2 + 1,
-                        "y": y * 2 + 1}
-            for dy in (-1, 0, 1):
-                for dx in (-1, 0, 1):
-                    displayed_map[
-                        current_pos["y"] + dy][
-                        current_pos["x"] + dx
-                        ] = MOTIF_CHAR
-        return displayed_map
+            cx, cy = to_grid(x, y)
+            for dx, dy in AROUND:
+                grid[cy + dy][cx + dx] = MOTIF_CHAR
+        return grid
 
-
-    def display_map(self, filename: str,
-                    start: tuple[int, int],
-                    end: tuple[int, int],
-                    motif_coords: list[tuple[int, int]]) -> None:
+    def display_map(self, filename: str, start: Point, end: Point,
+                    motif_coords: list[Point]) -> None:
         with open(filename, "r") as f:
             hints = self.parse_file(f)
 
         height = len(hints) * 2 + 1
         width = len(hints[0]) * 2 + 1
-        displayed_map = self.init_displayed_map(width, height, start, end)
-        displayed_map = self.fill_map(displayed_map, hints)
-        displayed_map = self.clean_map(displayed_map)
-        displayed_map = self.draw_motif(displayed_map, motif_coords)
-        for row in displayed_map:
-            print(''.join(row))
+        grid = self.init_displayed_map(width, height, start, end)
+        grid = self.fill_map(grid, hints)
+        grid = self.clean_map(grid)
+        grid = self.draw_motif(grid, motif_coords)
+        for row in grid:
+            print("".join(row))
