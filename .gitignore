@@ -4,3 +4,4 @@ __pycache__/
 *.pdf
 maze.txt
 test.txt
+maze_analyzer.py
