@@ -2,8 +2,8 @@
 # Format: KEY=VALUE, one per line. Lines starting with # are ignored.
 
 # Maze size (number of cells)
-WIDTH=20
-HEIGHT=15
+WIDTH=40
+HEIGHT=40
 
 # Coordinates are x,y (x = column, y = row), starting at 0
 ENTRY=0,0

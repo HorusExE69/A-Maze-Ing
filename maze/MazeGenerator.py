@@ -1,9 +1,12 @@
-from random import choice, randint
+from random import choice, randint, shuffle
 from sys import stderr
 from os.path import realpath
 
 
 class MazeGenerator:
+    DIRECTIONS = ((-1, 0, 1, 4), (0, 1, 2, 8),
+                  (1, 0, 4, 1), (0, -1, 8, 2))
+
     def __init__(self, width=50, height=50, filename="maze.txt"):
         self.__width = width
         self.__height = height
@@ -23,15 +26,17 @@ class MazeGenerator:
         self.__grid = [[15 for dx in range(self.__width)]
                        for dy in range(self.__height)]
 
-        if self.__width < m_w + 2 or self.__height < m_h + 2:
+        d_x = self.__width // 2 - (len(motif[0]) // 2)
+        d_y = self.__height // 2 - (len(motif) // 2)
+
+        if d_x < 1 or d_y < 1 \
+                or d_x + m_w - 1 > self.__width - 2 \
+                or d_y + m_h - 1 > self.__height - 2:
             print(
                 "Maze too small for the 42 pattern, skipping it",
                 file=stderr,
             )
             return
-
-        d_x = (self.__width - m_w) // 2
-        d_y = (self.__height - m_h) // 2
 
         for dy in range(0, m_h):
             for dx in range(0, m_w):
@@ -92,9 +97,6 @@ class MazeGenerator:
     def path_gen(self):
         stack = [list(self.__entry)]
 
-        dir = ((-1, 0, 1, 4), (0, 1, 2, 8),
-               (1, 0, 4, 1), (0, -1, 8, 2))
-
         while stack:
             head = stack[-1]
 
@@ -103,25 +105,26 @@ class MazeGenerator:
 
             neighbors = []
 
-            for dl, dc, bit, bit_opp in dir:
+            for dl, dc, bit, bit_opp in MazeGenerator.DIRECTIONS:
                 row = head[0] + dl
-                column = head[1] + dc
-                if 0 <= row < self.__height and 0 <= column < self.__width \
-                        and self.__grid[row][column] == 15:
-                    neighbors.append([row, column, bit, bit_opp])
+                col = head[1] + dc
+                if 0 <= row < self.__height and 0 <= col < self.__width \
+                        and self.__grid[row][col] == 15:
+                    neighbors.append([row, col, bit, bit_opp])
 
             if neighbors:
-                row, column, bit, bit_opp = choice(neighbors)
+                row, col, bit, bit_opp = choice(neighbors)
                 self.__grid[head[0]][head[1]] &= ~bit
-                self.__grid[row][column] &= ~bit_opp
-                stack.append([row, column])
+                self.__grid[row][col] &= ~bit_opp
+                stack.append([row, col])
             else:
                 stack.pop()
 
+    def close_motif(self):
         for row in range(self.__height):
-            for column in range(self.__width):
-                if self.__grid[row][column] == -1:
-                    self.__grid[row][column] = 15
+            for col in range(self.__width):
+                if self.__grid[row][col] == -1:
+                    self.__grid[row][col] = 15
 
     def parse_config(self, filename):
         mandatory = {
@@ -193,9 +196,13 @@ class MazeGenerator:
             )
 
     def check_entry_exit(self):
-        if self.__entry[0] not in range(self.__height) or self.__entry[1] not in range(self.__width):
-            raise ValueError(f"Entry position {self.__entry} is out of bounds")
-        elif self.__end[0] not in range(self.__height) or self.__end[1] not in range(self.__width):
+        if (self.__entry[0] not in range(self.__height)
+                or self.__entry[1] not in range(self.__width)):
+            raise ValueError(
+                f"Entry position {self.__entry} is out of bounds"
+            )
+        elif (self.__end[0] not in range(self.__height)
+              or self.__end[1] not in range(self.__width)):
             raise ValueError(f"Exit position {self.__end} is out of bounds")
         elif self.__grid[self.__entry[0]][self.__entry[1]] == -1:
             raise ValueError(f"Entry position {self.__entry} is on the 42")
@@ -203,7 +210,88 @@ class MazeGenerator:
             raise ValueError(f"Exit position {self.__end} is on the 42")
         elif self.__entry == self.__end:
             raise ValueError(
-                f"Entry position {self.__entry} and exit position {self.__end} are the same")
+                f"Entry position {self.__entry} and exit position "
+                "are the same"
+            )
+
+    def __is_dead_end(self, r, c):
+        value = self.__grid[r][c]
+        return value != -1 and bin(value).count("1") == 3
+
+    def __is_open_square(self, r, c):
+        if r < 0 or c < 0:
+            return False
+        if r + 2 >= self.__height or c + 2 >= self.__width:
+            return False
+
+        for row in range(r, r + 3):
+            for col in range(c, c + 3):
+                if self.__grid[row][col] == -1:
+                    return False
+
+        for row in range(r, r + 3):
+            for col in (c, c + 1):
+                if self.__grid[row][col] == -1:
+                    return False
+                if self.__grid[row][col] & 2:
+                    return False
+
+        for col in range(c, c + 3):
+            for row in (r, r + 1):
+                if self.__grid[row][col] == -1:
+                    return False
+                if self.__grid[row][col] & 4:
+                    return False
+
+        return True
+
+    def __is_in_open_square(self, r, c):
+        for row in range(r - 2, r + 1):
+            for col in range(c - 2, c + 1):
+                if self.__is_open_square(row, col):
+                    return True
+        return False
+
+    def braid(self):
+        for r in range(self.__height):
+            for c in range(self.__width):
+                if not self.__is_dead_end(r, c):
+                    continue
+
+                dead_neighbors = []
+                other_neighbors = []
+                for dl, dc, bit, bit_opp in MazeGenerator.DIRECTIONS:
+                    row = r + dl
+                    col = c + dc
+                    if not (0 <= row < self.__height
+                            and 0 <= col < self.__width):
+                        continue
+                    if self.__grid[row][col] == -1:
+                        continue
+                    if not (self.__grid[r][c] & bit):
+                        continue
+
+                    candidate = (row, col, bit, bit_opp)
+                    if self.__is_dead_end(row, col):
+                        dead_neighbors.append(candidate)
+                    else:
+                        other_neighbors.append(candidate)
+
+                shuffle(dead_neighbors)
+                shuffle(other_neighbors)
+                candidates = dead_neighbors + other_neighbors
+
+                for row, col, bit, bit_opp in candidates:
+                    self.__grid[r][c] &= ~bit
+                    self.__grid[row][col] &= ~bit_opp
+
+                    if (self.__is_in_open_square(r, c)
+                            or self.__is_in_open_square(row, col)):
+                        self.__grid[r][c] |= bit
+                        self.__grid[row][col] |= bit_opp
+                    else:
+                        break
+
 
     # Getters
 
@@ -220,10 +308,14 @@ class MazeGenerator:
         return self.__filename
 
     @property
-    def get_motif_coords(self) -> list[tuple[int, int]]:
+    def get_motif_coords(self):
         coords: list[tuple[int, int]] = []
         for y in range(len(self.__grid)):
             for x in range(len(self.__grid[y])):
                 if self.__grid[y][x] == -1:
                     coords.append((x, y))
         return coords
+
+    @property
+    def perfect_mode(self):
+        return self.__perfect
