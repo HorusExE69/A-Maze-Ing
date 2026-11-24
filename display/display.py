@@ -69,8 +69,8 @@ class Display:
     def __init__(
         self,
         filename: str,
-        start: Point,
-        end: Point,
+        start: Point | list[int],
+        end: Point | list[int],
         motif_coords: list[Point],
         path: str,
     ) -> None:
@@ -159,7 +159,7 @@ class Display:
                             f"{direction} != {opposite}"
                         )
 
-    def validate_point(self, point: Point) -> None:
+    def validate_point(self, point: Point | list[int]) -> None:
         """Check whether a point belongs to the maze."""
         x, y = point
 
