@@ -1,6 +1,5 @@
 from typing import IO
-from ansi_code import get_ansi
-from constants import WALL_CHAR, MOTIF_CHAR
+from constants import WALL_CHAR, MOTIF_CHAR, START_CHAR, END_CHAR
 
 
 def is_surrounded_by_walls(displayed_map, x, y):
@@ -51,8 +50,8 @@ def init_displayed_map(width, height, start, end) -> list[list[str]]:
             displayed_map.append([WALL_CHAR] +
                                  [' ' for _ in range(width - 2)] +
                                  [WALL_CHAR])
-    displayed_map[start[1] * 2 + 1][start[0] * 2 + 1] = get_ansi('S', "green")
-    displayed_map[end[1] * 2 + 1][end[0] * 2 + 1] = get_ansi('E', "green")
+    displayed_map[start[1] * 2 + 1][start[0] * 2 + 1] = START_CHAR
+    displayed_map[end[1] * 2 + 1][end[0] * 2 + 1] = END_CHAR
     return displayed_map
 
 
@@ -61,8 +60,8 @@ def clean_map(displayed_map: list[list[str]]) -> list[list[str]]:
         for x in range(1, len(displayed_map[y]) - 1):
             if displayed_map[y][x] == WALL_CHAR:
                 continue
-            if displayed_map[y][x] in (get_ansi('S', "green"),
-                                       get_ansi('E', "green")):
+            if displayed_map[y][x] in (START_CHAR,
+                                       END_CHAR):
                 continue
             if is_surrounded_by_walls(displayed_map, x, y):
                 displayed_map[y][x] = WALL_CHAR
