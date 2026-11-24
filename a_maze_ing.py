@@ -8,12 +8,7 @@ class UsageError(Exception):
         super().__init__("Usage: python3 a_maze_ing.py <config_file>")
 
 
-motif = ["#.#.###",
-         "#.#...#",
-         "###.###",
-         "..#.#..",
-         "..#.###"
-         ]
+motif = ["#.#.###", "#.#...#", "###.###", "..#.#..", "..#.###"]
 try:
     if len(argv) != 2:
         raise UsageError()
@@ -28,8 +23,8 @@ try:
 
     START_POS = (0, 0)
     END_POS = (maze.get_width() - 1, maze.get_height() - 1)
-    displayer = Display()
-    displayer.display_map(maze.get_file(), START_POS, END_POS, motif_coords)
+    displayer = Display(maze.get_file(), START_POS, END_POS, motif_coords)
+    displayer.display_map()
 
     maze.write_eof()
 except (OSError, ValueError) as e:
