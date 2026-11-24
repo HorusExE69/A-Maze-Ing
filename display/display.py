@@ -1,6 +1,7 @@
 from ansi_code import get_ansi
 
 # Char constants
+BORDER_CHAR = get_ansi("#", "black")
 WALL_CHAR = get_ansi("@", "black")
 MOTIF_CHAR = get_ansi("@", "red")
 START_CHAR = get_ansi("S", "green")
@@ -39,6 +40,8 @@ CORNERS: tuple[tuple[str, str], ...] = (
     ("east", "south"),
     ("south", "west"),
     ("west", "north"),
+    ("west", "east"),
+    ("south", "north"),
 )
 
 AROUND: tuple[Point, ...] = tuple(
@@ -184,9 +187,9 @@ class Display:
         width, height = self.width, self.height
 
         self.grid = [
-            [WALL_CHAR] * width
+            [BORDER_CHAR] * width
             if y in (0, height - 1)
-            else [WALL_CHAR] + [" "] * (width - 2) + [WALL_CHAR]
+            else [BORDER_CHAR] + [" "] * (width - 2) + [BORDER_CHAR]
             for y in range(height)
         ]
 
@@ -204,6 +207,7 @@ class Display:
         for y in range(1, len(self.grid) - 1):
             for x in range(1, len(self.grid[y]) - 1):
                 if self.grid[y][x] in (
+                    BORDER_CHAR,
                     WALL_CHAR,
                     START_CHAR,
                     END_CHAR,
@@ -226,6 +230,8 @@ class Display:
 
                 # Diagonals
                 for a, b in CORNERS:
+                    if self.grid[cy][cx] != ' ':
+                        continue
                     if hint[a] and hint[b]:
                         dx = OFFSETS[a][0] + OFFSETS[b][0]
                         dy = OFFSETS[a][1] + OFFSETS[b][1]
@@ -251,6 +257,7 @@ class Display:
                     continue
 
                 if self.grid[ny][nx] in (
+                    BORDER_CHAR,
                     START_CHAR,
                     END_CHAR,
                 ):
