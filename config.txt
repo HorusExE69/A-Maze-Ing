@@ -1,0 +1,20 @@
+# A-Maze-ing default configuration
+# Format: KEY=VALUE, one per line. Lines starting with # are ignored.
+
+# Maze size (number of cells)
+WIDTH=20
+HEIGHT=15
+
+# Coordinates are x,y (x = column, y = row), starting at 0
+ENTRY=0,0
+EXIT=19,14
+
+# Output file (hex walls + entry, exit and shortest path)
+OUTPUT_FILE=maze.txt
+
+# True = exactly one path between entry and exit
+# False = Pac-Man board with loops (default mode of the subject)
+PERFECT=True
+
+# Optional keys
+SEED=42
