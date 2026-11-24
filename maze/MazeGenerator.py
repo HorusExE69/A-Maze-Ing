@@ -206,15 +206,19 @@ class MazeGenerator:
 
     # Getters
 
+    @property
     def get_width(self):
         return self.__width
 
+    @property
     def get_height(self):
         return self.__height
 
+    @property
     def get_file(self):
         return self.__filename
 
+    @property
     def get_motif_coords(self) -> list[tuple[int, int]]:
         coords: list[tuple[int, int]] = []
         for y in range(len(self.__grid)):
@@ -222,3 +226,7 @@ class MazeGenerator:
                 if self.__grid[y][x] == -1:
                     coords.append((x, y))
         return coords
+
+    @property
+    def get_path(self) -> list[list[int]]:
+        return self.__path

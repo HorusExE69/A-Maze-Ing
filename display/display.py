@@ -27,9 +27,7 @@ CORNERS: tuple[tuple[str, str], ...] = (
     ("south", "west"),
     ("west", "north"),
 )
-AROUND: tuple[Point, ...] = tuple(
-    (dx, dy) for dy in (-1, 0, 1) for dx in (-1, 0, 1)
-)
+AROUND: tuple[Point, ...] = tuple((dx, dy) for dy in (-1, 0, 1) for dx in (-1, 0, 1))
 NEIGHBORS: tuple[Point, ...] = tuple(p for p in AROUND if p != (0, 0))
 
 
@@ -66,6 +64,7 @@ class Display:
         start: Point,
         end: Point,
         motif_coords: list[Point],
+        path: list[list[int]],
     ) -> None:
         self.filename = filename
         self.start = start
@@ -73,6 +72,7 @@ class Display:
         self.motif_coords = motif_coords
         self.hints: list[list[Cell]] = []
         self.grid: Grid = []
+        self.path = path
 
     @property
     def width(self) -> int:
@@ -122,9 +122,7 @@ class Display:
         Returns:
             bool: return True if the cell is surrounded by walls
         """
-        return all(
-            self.grid[y + dy][x + dx] == WALL_CHAR for dx, dy in NEIGHBORS
-        )
+        return all(self.grid[y + dy][x + dx] == WALL_CHAR for dx, dy in NEIGHBORS)
 
     def init_displayed_map(self) -> None:
         """

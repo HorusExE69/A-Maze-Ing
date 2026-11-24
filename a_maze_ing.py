@@ -17,13 +17,17 @@ try:
     maze.grid_gen(motif)
     maze.check_entry_exit()
     # maze.entry_and_exit()
-    motif_coords = maze.get_motif_coords()
+    motif_coords = maze.get_motif_coords
     maze.path_gen()
     maze.write_in_file()
 
     START_POS = (0, 0)
-    END_POS = (maze.get_width() - 1, maze.get_height() - 1)
-    displayer = Display(maze.get_file(), START_POS, END_POS, motif_coords)
+    END_POS = (maze.get_width - 1, maze.get_height - 1)
+    displayer = Display(maze.get_file,
+                        START_POS,
+                        END_POS,
+                        motif_coords,
+                        maze.get_path)
     displayer.display_map()
 
     maze.write_eof()
