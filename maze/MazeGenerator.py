@@ -68,7 +68,7 @@ class MazeGenerator:
                                 for valeur in self.__grid[i]))
                 f.write('\n')
 
-    def write_eof(self):
+    def write_eof(self) -> str:
         with open(self.__filename, "a", encoding="utf-8") as f:
             f.write('\n')
             f.write(f"{self.__entry[1]},{self.__entry[0]}\n")
@@ -87,6 +87,7 @@ class MazeGenerator:
                 elif dc == 1:
                     path_str += 'E'
             f.write(path_str + '\n')
+        return path_str
 
     def path_gen(self):
         stack = [list(self.__entry)]
@@ -226,7 +227,3 @@ class MazeGenerator:
                 if self.__grid[y][x] == -1:
                     coords.append((x, y))
         return coords
-
-    @property
-    def get_path(self) -> list[list[int]]:
-        return self.__path

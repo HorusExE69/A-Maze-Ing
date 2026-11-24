@@ -64,7 +64,7 @@ class Display:
         start: Point,
         end: Point,
         motif_coords: list[Point],
-        path: list[list[int]],
+        path: str,
     ) -> None:
         self.filename = filename
         self.start = start
@@ -147,7 +147,7 @@ class Display:
             for x in range(1, len(self.grid[y]) - 1):
                 if self.grid[y][x] in (WALL_CHAR, START_CHAR, END_CHAR):
                     continue
-                if self.is_surrounded_by_walls(x, y):
+                if all([True if ]):
                     self.grid[y][x] = WALL_CHAR
 
     def fill_map(self) -> None:
@@ -167,6 +167,10 @@ class Display:
                         dx = OFFSETS[a][0] + OFFSETS[b][0]
                         dy = OFFSETS[a][1] + OFFSETS[b][1]
                         self.grid[cy + dy][cx + dx] = WALL_CHAR
+
+    def draw_path(self) -> None:
+        """Draw the path of the maze"""
+        pass
 
     def draw_motif(self) -> None:
         """Paint motif's walls in red"""

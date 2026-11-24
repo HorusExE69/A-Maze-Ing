@@ -20,6 +20,7 @@ try:
     motif_coords = maze.get_motif_coords
     maze.path_gen()
     maze.write_in_file()
+    path_str = maze.write_eof()
 
     START_POS = (0, 0)
     END_POS = (maze.get_width - 1, maze.get_height - 1)
@@ -27,10 +28,9 @@ try:
                         START_POS,
                         END_POS,
                         motif_coords,
-                        maze.get_path)
+                        path_str)
     displayer.display_map()
 
-    maze.write_eof()
 except (OSError, ValueError) as e:
     print(f"Error: {e}", file=stderr)
     exit(1)
