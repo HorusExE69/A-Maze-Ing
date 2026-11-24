@@ -41,7 +41,8 @@ CORNERS: tuple[tuple[str, str], ...] = (
     ("west", "north"),
 )
 
-AROUND: tuple[Point, ...] = tuple((dx, dy) for dy in (-1, 0, 1) for dx in (-1, 0, 1))
+AROUND: tuple[Point, ...] = tuple(
+    (dx, dy) for dy in (-1, 0, 1) for dx in (-1, 0, 1))
 
 NEIGHBORS: tuple[Point, ...] = tuple(p for p in AROUND if p != (0, 0))
 
@@ -128,7 +129,8 @@ class Display:
                     ) from error
 
                 if self.hints and len(row) != len(self.hints[0]):
-                    raise ValueError(f"Inconsistent row width at line {line_number}")
+                    raise ValueError("Inconsistent row width at line",
+                                     line_number)
 
                 self.hints.append(row)
 
@@ -244,7 +246,8 @@ class Display:
             for dx, dy in AROUND:
                 nx, ny = cx + dx, cy + dy
 
-                if not (0 <= ny < len(self.grid) and 0 <= nx < len(self.grid[ny])):
+                if not (0 <= ny < len(self.grid) and
+                        0 <= nx < len(self.grid[ny])):
                     continue
 
                 if self.grid[ny][nx] in (

@@ -17,7 +17,7 @@ try:
     maze.grid_gen(motif)
     maze.check_entry_exit()
     # maze.entry_and_exit()
-    motif_coords = maze.get_motif_coords()
+    motif_coords = maze.get_motif_coords
     maze.path_gen()
     if not maze.perfect_mode:
         maze.braid()
@@ -25,13 +25,10 @@ try:
     maze.write_in_file()
     path_str = maze.write_eof()
 
-    START_POS = (0, 0)
-    END_POS = (maze.get_width() - 1, maze.get_height() - 1)
-    displayer = Display(maze.get_file,
-                        START_POS,
-                        END_POS,
-                        motif_coords,
-                        path_str)
+    START_POS = maze.get_start_pos
+    END_POS = maze.get_end_pos
+    displayer = Display(maze.get_file, START_POS, END_POS,
+                        motif_coords, path_str)
     displayer.display_map()
 
 except (OSError, ValueError) as e:

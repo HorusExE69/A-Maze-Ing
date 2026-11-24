@@ -4,8 +4,7 @@ from os.path import realpath
 
 
 class MazeGenerator:
-    DIRECTIONS = ((-1, 0, 1, 4), (0, 1, 2, 8),
-                  (1, 0, 4, 1), (0, -1, 8, 2))
+    DIRECTIONS = ((-1, 0, 1, 4), (0, 1, 2, 8), (1, 0, 4, 1), (0, -1, 8, 2))
 
     def __init__(self, width=50, height=50, filename="maze.txt"):
         self.__width = width
@@ -23,15 +22,19 @@ class MazeGenerator:
         m_w = len(motif[0])
         m_h = len(motif)
 
-        self.__grid = [[15 for dx in range(self.__width)]
-                       for dy in range(self.__height)]
+        self.__grid = [
+            [15 for dx in range(self.__width)] for dy in range(self.__height)
+        ]
 
         d_x = self.__width // 2 - (len(motif[0]) // 2)
         d_y = self.__height // 2 - (len(motif) // 2)
 
-        if d_x < 1 or d_y < 1 \
-                or d_x + m_w - 1 > self.__width - 2 \
-                or d_y + m_h - 1 > self.__height - 2:
+        if (
+            d_x < 1
+            or d_y < 1
+            or d_x + m_w - 1 > self.__width - 2
+            or d_y + m_h - 1 > self.__height - 2
+        ):
             print(
                 "Maze too small for the 42 pattern, skipping it",
                 file=stderr,
@@ -40,7 +43,7 @@ class MazeGenerator:
 
         for dy in range(0, m_h):
             for dx in range(0, m_w):
-                if motif[dy][dx] == '#':
+                if motif[dy][dx] == "#":
                     self.__grid[d_y + dy][d_x + dx] = -1
 
     def entry_and_exit(self):
@@ -60,8 +63,10 @@ class MazeGenerator:
         while not stop:
             self.__end = [randint(0, self.__height - 1),
                           randint(0, self.__width - 1)]
-            if self.__grid[self.__end[0]][self.__end[1]] == -1 \
-                    or self.__end == self.__entry:
+            if (
+                self.__grid[self.__end[0]][self.__end[1]] == -1
+                or self.__end == self.__entry
+            ):
                 continue
             else:
                 stop = True
@@ -69,13 +74,15 @@ class MazeGenerator:
     def write_in_file(self):
         with open(self.__filename, "w", encoding="utf-8") as f:
             for i in range(len(self.__grid)):
-                f.write(''.join(format(valeur, 'X').lower()
-                                for valeur in self.__grid[i]))
-                f.write('\n')
+                f.write(
+                    "".join(format(valeur, "X").lower()
+                            for valeur in self.__grid[i])
+                )
+                f.write("\n")
 
     def write_eof(self) -> str:
         with open(self.__filename, "a", encoding="utf-8") as f:
-            f.write('\n')
+            f.write("\n")
             f.write(f"{self.__entry[1]},{self.__entry[0]}\n")
             f.write(f"{self.__end[1]},{self.__end[0]}\n")
 
@@ -84,14 +91,14 @@ class MazeGenerator:
                 dl = self.__path[i + 1][0] - self.__path[i][0]
                 dc = self.__path[i + 1][1] - self.__path[i][1]
                 if dl == -1:
-                    path_str += 'N'
+                    path_str += "N"
                 elif dl == 1:
-                    path_str += 'S'
+                    path_str += "S"
                 elif dc == -1:
-                    path_str += 'W'
+                    path_str += "W"
                 elif dc == 1:
-                    path_str += 'E'
-            f.write(path_str + '\n')
+                    path_str += "E"
+            f.write(path_str + "\n")
         return path_str
 
     def path_gen(self):
@@ -108,8 +115,11 @@ class MazeGenerator:
             for dl, dc, bit, bit_opp in MazeGenerator.DIRECTIONS:
                 row = head[0] + dl
                 col = head[1] + dc
-                if 0 <= row < self.__height and 0 <= col < self.__width \
-                        and self.__grid[row][col] == 15:
+                if (
+                    0 <= row < self.__height
+                    and 0 <= col < self.__width
+                    and self.__grid[row][col] == 15
+                ):
                     neighbors.append([row, col, bit, bit_opp])
 
             if neighbors:
@@ -128,7 +138,12 @@ class MazeGenerator:
 
     def parse_config(self, filename):
         mandatory = {
-            "WIDTH", "HEIGHT", "ENTRY", "EXIT", "OUTPUT_FILE", "PERFECT",
+            "WIDTH",
+            "HEIGHT",
+            "ENTRY",
+            "EXIT",
+            "OUTPUT_FILE",
+            "PERFECT",
         }
         allowed = mandatory | {"SEED"}
         seen = set()
@@ -136,12 +151,12 @@ class MazeGenerator:
         with open(filename, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
-                if not line or line.startswith('#'):
+                if not line or line.startswith("#"):
                     continue
-                if '=' not in line:
+                if "=" not in line:
                     raise ValueError(f"Invalid configuration line: {line}")
 
-                key, value = line.split('=', 1)
+                key, value = line.split("=", 1)
                 key = key.strip()
                 value = value.strip()
 
@@ -160,19 +175,17 @@ class MazeGenerator:
                     if self.__height <= 0:
                         raise ValueError("Height must be a positive integer")
                 elif key == "ENTRY":
-                    values = value.split(',')
+                    values = value.split(",")
                     if len(values) != 2:
                         raise ValueError(
-                            "Entry must be in the format 'ENTRY=x,y'"
-                        )
+                            "Entry must be in the format 'ENTRY=x,y'")
                     x, y = (item.strip() for item in values)
                     self.__entry = [int(y), int(x)]
                 elif key == "EXIT":
-                    values = value.split(',')
+                    values = value.split(",")
                     if len(values) != 2:
                         raise ValueError(
-                            "Exit must be in the format 'EXIT=x,y'"
-                        )
+                            "Exit must be in the format 'EXIT=x,y'")
                     x, y = (item.strip() for item in values)
                     self.__end = [int(y), int(x)]
                 elif key == "OUTPUT_FILE":
@@ -187,22 +200,18 @@ class MazeGenerator:
         missing = sorted(mandatory - seen)
         if missing:
             raise ValueError(
-                "Missing configuration keys: " + ', '.join(missing)
-            )
+                "Missing configuration keys: " + ", ".join(missing))
 
         if realpath(self.__filename) == realpath(filename):
             raise ValueError(
-                "Output file cannot be the same as the configuration file"
-            )
+                "Output file cannot be the same as the configuration file")
 
     def check_entry_exit(self):
-        if (self.__entry[0] not in range(self.__height)
-                or self.__entry[1] not in range(self.__width)):
-            raise ValueError(
-                f"Entry position {self.__entry} is out of bounds"
-            )
-        elif (self.__end[0] not in range(self.__height)
-              or self.__end[1] not in range(self.__width)):
+        if self.__entry[0] not in range(self.__height) or \
+           self.__entry[1] not in range(self.__width):
+            raise ValueError(f"Entry position {self.__entry} is out of bounds")
+        elif (self.__end[0] not in range(self.__height) or
+              self.__end[1] not in range(self.__width)):
             raise ValueError(f"Exit position {self.__end} is out of bounds")
         elif self.__grid[self.__entry[0]][self.__entry[1]] == -1:
             raise ValueError(f"Entry position {self.__entry} is on the 42")
@@ -263,8 +272,8 @@ class MazeGenerator:
                 for dl, dc, bit, bit_opp in MazeGenerator.DIRECTIONS:
                     row = r + dl
                     col = c + dc
-                    if not (0 <= row < self.__height
-                            and 0 <= col < self.__width):
+                    if not (0 <= row < self.__height and
+                            0 <= col < self.__width):
                         continue
                     if self.__grid[row][col] == -1:
                         continue
@@ -285,13 +294,12 @@ class MazeGenerator:
                     self.__grid[r][c] &= ~bit
                     self.__grid[row][col] &= ~bit_opp
 
-                    if (self.__is_in_open_square(r, c)
-                            or self.__is_in_open_square(row, col)):
+                    if self.__is_in_open_square(r, c) or \
+                       self.__is_in_open_square(row, col):
                         self.__grid[r][c] |= bit
                         self.__grid[row][col] |= bit_opp
                     else:
                         break
-
 
     # Getters
 
@@ -304,11 +312,19 @@ class MazeGenerator:
         return self.__height
 
     @property
+    def get_start_pos(self):
+        return self.__entry
+
+    @property
+    def get_end_pos(self):
+        return self.__end
+
+    @property
     def get_file(self):
         return self.__filename
 
     @property
-    def get_motif_coords(self):
+    def get_motif_coords(self) -> list[tuple[int, int]]:
         coords: list[tuple[int, int]] = []
         for y in range(len(self.__grid)):
             for x in range(len(self.__grid[y])):
