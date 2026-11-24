@@ -93,6 +93,14 @@ class MazeGenerator:
                 if self.__grid[row][column] == -1:
                     self.__grid[row][column] = 15
 
+    def get_motif_coords(self) -> list[tuple[int, int]]:
+        coords: list[tuple[int, int]] = []
+        for y in range(len(self.__grid)):
+            for x in range(len(self.__grid[y])):
+                if self.__grid[y][x] == -1:
+                    coords.append((x, y))
+        return coords
+
 
 WIDTH = 10
 HEIGHT = 10
@@ -108,8 +116,9 @@ motif = ["#.#.###",
 
 maze = MazeGenerator(WIDTH, HEIGHT, argv[1])
 maze.grid_gen(motif)
+motif_coords = maze.get_motif_coords()
 maze.entry_and_exit()
 maze.path_gen()
 maze.write_in_file()
 
-display_map(argv[1], START_POS, END_POS)
+display_map(argv[1], START_POS, END_POS, motif_coords)

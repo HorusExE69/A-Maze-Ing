@@ -1,6 +1,6 @@
 from typing import IO
 from ansi_code import get_ansi
-from constants import WALL_CHAR
+from constants import WALL_CHAR, MOTIF_CHAR
 
 
 def is_surrounded_by_walls(displayed_map, x, y):
@@ -111,12 +111,27 @@ def fill_map(displayed_map: list[list[str]],
                 displayed_map[
                     current_pos["y"] - 1][
                     current_pos["x"] - 1] = WALL_CHAR
-    return clean_map(displayed_map)
+    return displayed_map
+
+
+def draw_motif(displayed_map: list[list[str]],
+               motif_coords: list[tuple[int, int]]) -> list[list[str]]:
+    for x, y in motif_coords:
+        current_pos = {"x": x * 2 + 1,
+                       "y": y * 2 + 1}
+        for dy in (-1, 0, 1):
+            for dx in (-1, 0, 1):
+                displayed_map[
+                    current_pos["y"] + dy][
+                    current_pos["x"] + dx
+                    ] = MOTIF_CHAR
+    return displayed_map
 
 
 def display_map(filename: str,
                 start: tuple[int, int],
-                end: tuple[int, int]) -> None:
+                end: tuple[int, int],
+                motif_coords: list[tuple[int, int]]) -> None:
     with open(filename, "r") as f:
         hints = parse_file(f)
 
@@ -124,9 +139,7 @@ def display_map(filename: str,
     width = len(hints[0]) * 2 + 1
     displayed_map = init_displayed_map(width, height, start, end)
     displayed_map = fill_map(displayed_map, hints)
+    displayed_map = clean_map(displayed_map)
+    displayed_map = draw_motif(displayed_map, motif_coords)
     for row in displayed_map:
         print(''.join(row))
-
-
-if __name__ == "__main__":
-    display_map("test.txt", (0, 0), (9, 9))
