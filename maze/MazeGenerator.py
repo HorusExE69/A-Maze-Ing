@@ -138,6 +138,19 @@ class MazeGenerator:
             else:
                 print(f"Unknown configuration option: {line}")
 
+    def check_entry_exit(self):
+        if self.__entry[0] not in range(self.__height) or self.__entry[1] not in range(self.__width):
+            raise ValueError(f"Entry position {self.__entry} is out of bounds")
+        elif self.__end[0] not in range(self.__height) or self.__end[1] not in range(self.__width):
+            raise ValueError(f"Exit position {self.__end} is out of bounds")
+        elif self.__grid[self.__entry[0]][self.__entry[1]] == -1:
+            raise ValueError(f"Entry position {self.__entry} is on the 42")
+        elif self.__grid[self.__end[0]][self.__end[1]] == -1:
+            raise ValueError(f"Exit position {self.__end} is on the 42")
+        elif self.__entry == self.__end:
+            raise ValueError(
+                f"Entry position {self.__entry} and exit position {self.__end} are the same")
+
     # Getters
 
     def get_width(self):
