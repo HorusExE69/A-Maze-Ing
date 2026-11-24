@@ -1,4 +1,6 @@
 from random import choice, randint
+from sys import stderr
+from os.path import realpath
 
 
 class MazeGenerator:
@@ -11,21 +13,29 @@ class MazeGenerator:
         self.__end = [height - 1, width - 1]
         self.__filename = filename
         self.__perfect = True
+        self.__seed = None
 
     def grid_gen(self, motif):
 
         m_w = len(motif[0])
         m_h = len(motif)
 
-        d_x = (self.__width - m_w) // 2
-        d_y = (self.__height - m_h) // 2
-
         self.__grid = [[15 for dx in range(self.__width)]
                        for dy in range(self.__height)]
 
+        if self.__width < m_w + 2 or self.__height < m_h + 2:
+            print(
+                "Maze too small for the 42 pattern, skipping it",
+                file=stderr,
+            )
+            return
+
+        d_x = (self.__width - m_w) // 2
+        d_y = (self.__height - m_h) // 2
+
         for dy in range(0, m_h):
             for dx in range(0, m_w):
-                if (motif[dy][dx] == '#'):
+                if motif[dy][dx] == '#':
                     self.__grid[d_y + dy][d_x + dx] = -1
 
     def entry_and_exit(self):
@@ -113,30 +123,73 @@ class MazeGenerator:
                     self.__grid[row][column] = 15
 
     def parse_config(self, filename):
+        mandatory = {
+            "WIDTH", "HEIGHT", "ENTRY", "EXIT", "OUTPUT_FILE", "PERFECT",
+        }
+        allowed = mandatory | {"SEED"}
+        seen = set()
+
         with open(filename, "r", encoding="utf-8") as f:
-            lines = f.readlines()
-        kept = []
-        for line in lines:
-            if line[0].isupper():
-                kept.append(line[:-1])
-        lines = kept
-        for line in lines:
-            if line.split('=')[0] == "WIDTH":
-                self.__width = int(line[6:])
-            elif line.split('=')[0] == "HEIGHT":
-                self.__height = int(line[7:])
-            elif line.split('=')[0] == "ENTRY":
-                self.__entry = [int(line[6:].split(",")[1]),
-                                int(line[6:].split(",")[0])]
-            elif line.split('=')[0] == "EXIT":
-                self.__end = [int(line[5:].split(",")[1]),
-                              int(line[5:].split(",")[0])]
-            elif line.split('=')[0] == "OUTPUT_FILE":
-                self.__filename = line[12:]
-            elif line.split('=')[0] == "PERFECT":
-                self.__perfect = line[8:] == "True"
-            else:
-                print(f"Unknown configuration option: {line}")
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                if '=' not in line:
+                    raise ValueError(f"Invalid configuration line: {line}")
+
+                key, value = line.split('=', 1)
+                key = key.strip()
+                value = value.strip()
+
+                if key not in allowed:
+                    raise ValueError(f"Unknown configuration key: {key}")
+                if key in seen:
+                    raise ValueError(f"Duplicate configuration key: {key}")
+                seen.add(key)
+
+                if key == "WIDTH":
+                    self.__width = int(value)
+                    if self.__width <= 0:
+                        raise ValueError("Width must be a positive integer")
+                elif key == "HEIGHT":
+                    self.__height = int(value)
+                    if self.__height <= 0:
+                        raise ValueError("Height must be a positive integer")
+                elif key == "ENTRY":
+                    values = value.split(',')
+                    if len(values) != 2:
+                        raise ValueError(
+                            "Entry must be in the format 'ENTRY=x,y'"
+                        )
+                    x, y = (item.strip() for item in values)
+                    self.__entry = [int(y), int(x)]
+                elif key == "EXIT":
+                    values = value.split(',')
+                    if len(values) != 2:
+                        raise ValueError(
+                            "Exit must be in the format 'EXIT=x,y'"
+                        )
+                    x, y = (item.strip() for item in values)
+                    self.__end = [int(y), int(x)]
+                elif key == "OUTPUT_FILE":
+                    self.__filename = value
+                elif key == "PERFECT":
+                    if value not in ("True", "False"):
+                        raise ValueError("PERFECT must be True or False")
+                    self.__perfect = value == "True"
+                elif key == "SEED":
+                    self.__seed = int(value)
+
+        missing = sorted(mandatory - seen)
+        if missing:
+            raise ValueError(
+                "Missing configuration keys: " + ', '.join(missing)
+            )
+
+        if realpath(self.__filename) == realpath(filename):
+            raise ValueError(
+                "Output file cannot be the same as the configuration file"
+            )
 
     def check_entry_exit(self):
         if self.__entry[0] not in range(self.__height) or self.__entry[1] not in range(self.__width):
