@@ -1,3 +1,5 @@
+from ansi_code import get_error
+
 # Types definitions
 Cell = dict[str, bool]
 Grid = list[list[str]]
@@ -72,7 +74,7 @@ class Display:
     def width(self) -> int:
         """Width of the displayed grid."""
         if not self.hints:
-            raise ValueError("Hints are empty")
+            raise ValueError(get_error("Hints are empty"))
 
         return len(self.hints[0]) * 2 + 1
 
@@ -80,7 +82,7 @@ class Display:
     def height(self) -> int:
         """Height of the displayed grid."""
         if not self.hints:
-            raise ValueError("Hints are empty")
+            raise ValueError(get_error("Hints are empty"))
 
         return len(self.hints) * 2 + 1
 
@@ -90,7 +92,7 @@ class Display:
         value = int(nb, 16)
 
         if not 0 <= value <= 15:
-            raise ValueError(f"Invalid hexadecimal value: {nb}")
+            raise ValueError(get_error(f"Invalid hexadecimal value: {nb}"))
 
         return {name: bool(value & bit) for name, bit in WALL_BITS.items()}
 
@@ -111,17 +113,17 @@ class Display:
                     row = [self.parse_hex(c) for c in line]
                 except ValueError as error:
                     raise ValueError(
-                        f"Invalid seed at line {line_number}: {error}"
+                        get_error(f"Invalid seed at line {line_number}: {error}")
                     ) from error
 
                 if self.hints and len(row) != len(self.hints[0]):
-                    raise ValueError("Inconsistent row width at line",
-                                     line_number)
+                    raise ValueError(get_error("Inconsistent row width at line"
+                                               f"{line_number}"))
 
                 self.hints.append(row)
 
         if not self.hints:
-            raise ValueError("The seed file is empty")
+            raise ValueError(get_error("The seed file is empty"))
 
     def validate_hints(self) -> None:
         """Check consistency between neighboring cells."""
@@ -140,9 +142,9 @@ class Display:
 
                     if hint[direction] != self.hints[ny][nx][opposite]:
                         raise ValueError(
-                            f"Inconsistent walls between "
+                            get_error(f"Inconsistent walls between "
                             f"({x}, {y}) and ({nx}, {ny}): "
-                            f"{direction} != {opposite}"
+                            f"{direction} != {opposite}")
                         )
 
     def validate_point(self, point: Point | list[int]) -> None:
@@ -150,7 +152,7 @@ class Display:
         x, y = point
 
         if not (0 <= y < len(self.hints) and 0 <= x < len(self.hints[y])):
-            raise ValueError(f"Invalid point: {point}")
+            raise ValueError(get_error(f"Invalid point: {point}"))
 
     def is_surrounded_by_walls(self, x: int, y: int) -> bool:
         """Check if a cell is surrounded by walls."""

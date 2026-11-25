@@ -1,7 +1,7 @@
 from random import choice, randint, shuffle
 from sys import stderr
 from os.path import realpath
-
+from ansi_code import get_error
 
 class MazeGenerator:
     DIRECTIONS = ((-1, 0, 1, 4), (0, 1, 2, 8), (1, 0, 4, 1), (0, -1, 8, 2))
@@ -36,7 +36,7 @@ class MazeGenerator:
             or d_y + m_h - 1 > self.__height - 2
         ):
             print(
-                "Maze too small for the 42 pattern, skipping it",
+                get_error("Maze too small for the 42 pattern, skipping it"),
                 file=stderr,
             )
             return
@@ -154,45 +154,45 @@ class MazeGenerator:
                 if not line or line.startswith("#"):
                     continue
                 if "=" not in line:
-                    raise ValueError(f"Invalid configuration line: {line}")
+                    raise ValueError(get_error(f"Invalid configuration line: {line}"))
 
                 key, value = line.split("=", 1)
                 key = key.strip()
                 value = value.strip()
 
                 if key not in allowed:
-                    raise ValueError(f"Unknown configuration key: {key}")
+                    raise ValueError(get_error(f"Unknown configuration key: {key}"))
                 if key in seen:
-                    raise ValueError(f"Duplicate configuration key: {key}")
+                    raise ValueError(get_error(f"Duplicate configuration key: {key}"))
                 seen.add(key)
 
                 if key == "WIDTH":
                     self.__width = int(value)
                     if self.__width <= 0:
-                        raise ValueError("Width must be a positive integer")
+                        raise ValueError(get_error("Width must be a positive integer"))
                 elif key == "HEIGHT":
                     self.__height = int(value)
                     if self.__height <= 0:
-                        raise ValueError("Height must be a positive integer")
+                        raise ValueError(get_error("Height must be a positive integer"))
                 elif key == "ENTRY":
                     values = value.split(",")
                     if len(values) != 2:
                         raise ValueError(
-                            "Entry must be in the format 'ENTRY=x,y'")
+                            get_error("Entry must be in the format 'ENTRY=x,y'"))
                     x, y = (item.strip() for item in values)
                     self.__entry = [int(y), int(x)]
                 elif key == "EXIT":
                     values = value.split(",")
                     if len(values) != 2:
                         raise ValueError(
-                            "Exit must be in the format 'EXIT=x,y'")
+                            get_error("Exit must be in the format 'EXIT=x,y'"))
                     x, y = (item.strip() for item in values)
                     self.__end = [int(y), int(x)]
                 elif key == "OUTPUT_FILE":
                     self.__filename = value
                 elif key == "PERFECT":
                     if value not in ("True", "False"):
-                        raise ValueError("PERFECT must be True or False")
+                        raise ValueError(get_error("PERFECT must be True or False"))
                     self.__perfect = value == "True"
                 elif key == "SEED":
                     self.__seed = int(value)
@@ -200,27 +200,27 @@ class MazeGenerator:
         missing = sorted(mandatory - seen)
         if missing:
             raise ValueError(
-                "Missing configuration keys: " + ", ".join(missing))
+                get_error("Missing configuration keys: " + ", ".join(missing)))
 
         if realpath(self.__filename) == realpath(filename):
             raise ValueError(
-                "Output file cannot be the same as the configuration file")
+                get_error("Output file cannot be the same as the configuration file"))
 
     def check_entry_exit(self):
         if self.__entry[0] not in range(self.__height) or \
            self.__entry[1] not in range(self.__width):
-            raise ValueError(f"Entry position {self.__entry} is out of bounds")
+            raise ValueError(get_error(f"Entry position {self.__entry} is out of bounds"))
         elif (self.__end[0] not in range(self.__height) or
               self.__end[1] not in range(self.__width)):
-            raise ValueError(f"Exit position {self.__end} is out of bounds")
+            raise ValueError(get_error(f"Exit position {self.__end} is out of bounds"))
         elif self.__grid[self.__entry[0]][self.__entry[1]] == -1:
-            raise ValueError(f"Entry position {self.__entry} is on the 42")
+            raise ValueError(get_error(f"Entry position {self.__entry} is on the 42"))
         elif self.__grid[self.__end[0]][self.__end[1]] == -1:
-            raise ValueError(f"Exit position {self.__end} is on the 42")
+            raise ValueError(get_error(f"Exit position {self.__end} is on the 42"))
         elif self.__entry == self.__end:
             raise ValueError(
-                f"Entry position {self.__entry} and exit position "
-                "are the same"
+                get_error(f"Entry position {self.__entry} and exit position "
+                "are the same")
             )
 
     def __is_dead_end(self, r, c):
