@@ -58,7 +58,8 @@ def get_chars(
 # -------------------------
 
 def generate_maze(
-    config_file: str
+    config_file: str,
+    reset_seed: int
 ) -> tuple[MazeGenerator, list[tuple[int, int]], str]:
 
     motif = [
@@ -71,6 +72,7 @@ def generate_maze(
 
     maze = MazeGenerator()
     maze.parse_config(config_file)
+    maze.randomize_seed()
     maze.grid_gen(motif)
     maze.check_entry_exit()
 
@@ -272,7 +274,7 @@ def main() -> None:
     ))
 
     # Generate the maze only once initially
-    maze, motif_coords, path_str = generate_maze(argv[1])
+    maze, motif_coords, path_str = generate_maze(argv[1], 0)
 
     while True:
 
@@ -299,7 +301,7 @@ def main() -> None:
         elif action == "regenerate":
             print_rerun()
 
-            maze, motif_coords, path_str = generate_maze(argv[1])
+            maze, motif_coords, path_str = generate_maze(argv[1], 1)
 
 
 if __name__ == "__main__":
