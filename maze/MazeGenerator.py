@@ -6,6 +6,15 @@ from ansi_code import get_error
 
 class MazeGenerator:
     DIRECTIONS = ((-1, 0, 1, 4), (0, 1, 2, 8), (1, 0, 4, 1), (0, -1, 8, 2))
+    MANDATORY_KEYS: set[str] = {
+        "WIDTH",
+        "HEIGHT",
+        "ENTRY",
+        "EXIT",
+        "OUTPUT_FILE",
+        "PERFECT",
+    }
+    ALLOWED_KEYS: set[str] = MANDATORY_KEYS | {"SEED"}
 
     def __init__(
         self,
@@ -22,6 +31,8 @@ class MazeGenerator:
         self.__filename: str = filename
         self.__perfect: bool = True
         self.__seed: int | None = None
+        self.__file_config: dict[str, str] = {}
+        self.__config_path: str | None = None
 
     def grid_gen(self, motif: list[str]) -> None:
         m_w = len(motif[0])
@@ -147,16 +158,57 @@ class MazeGenerator:
                 if self.__grid[row][col] == -1:
                     self.__grid[row][col] = 15
 
+    def __set_option(self, key: str, value: str) -> None:
+        if key not in MazeGenerator.ALLOWED_KEYS:
+            raise ValueError(f"Unknown configuration key: {key}")
+
+        if key == "WIDTH":
+            width = int(value)
+            if width <= 0:
+                raise ValueError(
+                    get_error("Width must be a positive integer"))
+            self.__width = width
+        elif key == "HEIGHT":
+            height = int(value)
+            if height <= 0:
+                raise ValueError(
+                    get_error("Height must be a positive integer"))
+            self.__height = height
+        elif key == "ENTRY":
+            values = value.split(",")
+            if len(values) != 2:
+                raise ValueError(
+                    get_error("Entry must be in the format 'ENTRY=x,y'"))
+            x, y = (item.strip() for item in values)
+            self.__entry = [int(y), int(x)]
+        elif key == "EXIT":
+            values = value.split(",")
+            if len(values) != 2:
+                raise ValueError(
+                    get_error("Exit must be in the format 'EXIT=x,y'"))
+            x, y = (item.strip() for item in values)
+            self.__end = [int(y), int(x)]
+        elif key == "OUTPUT_FILE":
+            if (
+                self.__config_path is not None
+                and realpath(value) == realpath(self.__config_path)
+            ):
+                message = (
+                    "Output file cannot be the same as the configuration file"
+                )
+                raise ValueError(get_error(message))
+            self.__filename = value
+        elif key == "PERFECT":
+            if value not in ("True", "False"):
+                raise ValueError(
+                    get_error("PERFECT must be True or False"))
+            self.__perfect = value == "True"
+        elif key == "SEED":
+            self.__seed = int(value)
+
     def parse_config(self, filename: str) -> None:
-        mandatory: set[str] = {
-            "WIDTH",
-            "HEIGHT",
-            "ENTRY",
-            "EXIT",
-            "OUTPUT_FILE",
-            "PERFECT",
-        }
-        allowed = mandatory | {"SEED"}
+        self.__config_path = filename
+        self.__file_config = {}
         seen: set[str] = set()
 
         with open(filename, "r", encoding="utf-8") as f:
@@ -172,7 +224,7 @@ class MazeGenerator:
                 key = key.strip()
                 value = value.strip()
 
-                if key not in allowed:
+                if key not in MazeGenerator.ALLOWED_KEYS:
                     raise ValueError(get_error(
                         f"Unknown configuration key: {key}"))
                 if key in seen:
@@ -180,50 +232,30 @@ class MazeGenerator:
                         f"Duplicate configuration key: {key}"))
                 seen.add(key)
 
-                if key == "WIDTH":
-                    self.__width = int(value)
-                    if self.__width <= 0:
-                        raise ValueError(
-                            get_error("Width must be a positive integer"))
-                elif key == "HEIGHT":
-                    self.__height = int(value)
-                    if self.__height <= 0:
-                        raise ValueError(
-                            get_error("Height must be a positive integer"))
-                elif key == "ENTRY":
-                    values = value.split(",")
-                    if len(values) != 2:
-                        raise ValueError(
-                            get_error(
-                                "Entry must be in the format 'ENTRY=x,y'"))
-                    x, y = (item.strip() for item in values)
-                    self.__entry = [int(y), int(x)]
-                elif key == "EXIT":
-                    values = value.split(",")
-                    if len(values) != 2:
-                        raise ValueError(
-                            get_error("Exit must be in the format 'EXIT=x,y'"))
-                    x, y = (item.strip() for item in values)
-                    self.__end = [int(y), int(x)]
-                elif key == "OUTPUT_FILE":
-                    self.__filename = value
-                elif key == "PERFECT":
-                    if value not in ("True", "False"):
-                        raise ValueError(
-                            get_error("PERFECT must be True or False"))
-                    self.__perfect = value == "True"
-                elif key == "SEED":
-                    self.__seed = int(value)
+                self.__set_option(key, value)
+                self.__file_config[key] = value
 
-        missing = sorted(mandatory - seen)
+        missing = sorted(MazeGenerator.MANDATORY_KEYS - seen)
         if missing:
-            raise ValueError(
-                get_error("Missing configuration keys: " + ", ".join(missing)))
+            raise ValueError(get_error(
+                "Missing configuration keys: " + ", ".join(missing)))
 
-        if realpath(self.__filename) == realpath(filename):
-            raise ValueError(
-                get_error("Output file cannot be the "
-                          "same as the configuration file"))
+    def custom_config(self, **kwargs: str | int | bool) -> None:
+        for key, value in kwargs.items():
+            key = key.upper()
+            self.__set_option(key, str(value))
+
+    def reset_config(self) -> None:
+        if not self.__file_config:
+            raise ValueError("No configuration file loaded")
+
+        for key, value in self.__file_config.items():
+            self.__set_option(key, value)
+        if "SEED" not in self.__file_config:
+            self.__seed = None
+
+        self.__grid = []
+        self.__path = []
 
     def check_entry_exit(self) -> None:
         if self.__entry[0] not in range(self.__height) or \
