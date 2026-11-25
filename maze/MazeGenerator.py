@@ -1,5 +1,4 @@
-
-from random import choice, randint, shuffle
+from random import choice, randint, shuffle, seed
 from sys import stderr
 from os.path import realpath
 from ansi_code import get_error
@@ -112,6 +111,9 @@ class MazeGenerator:
 
     def path_gen(self) -> None:
         stack: list[list[int]] = [list(self.__entry)]
+
+        if self.__seed is not None:
+            seed(self.__seed)
 
         while stack:
             head = stack[-1]
