@@ -113,7 +113,8 @@ class Display:
                     row = [self.parse_hex(c) for c in line]
                 except ValueError as error:
                     raise ValueError(
-                        get_error(f"Invalid seed at line {line_number}: {error}")
+                        get_error(f"Invalid seed at line {line_number}"
+                                  f": {error}")
                     ) from error
 
                 if self.hints and len(row) != len(self.hints[0]):
@@ -143,8 +144,8 @@ class Display:
                     if hint[direction] != self.hints[ny][nx][opposite]:
                         raise ValueError(
                             get_error(f"Inconsistent walls between "
-                            f"({x}, {y}) and ({nx}, {ny}): "
-                            f"{direction} != {opposite}")
+                                      f"({x}, {y}) and ({nx}, {ny}): "
+                                      f"{direction} != {opposite}")
                         )
 
     def validate_point(self, point: Point | list[int]) -> None:
@@ -174,7 +175,8 @@ class Display:
         self.grid = [
             [self.chars["BORDER_CHAR"]] * width
             if y in (0, height - 1)
-            else [self.chars["BORDER_CHAR"]] + [" "] * (width - 2) + [self.chars["BORDER_CHAR"]]
+            else [self.chars["BORDER_CHAR"]] + [" "] * (width - 2) +
+                 [self.chars["BORDER_CHAR"]]
             for y in range(height)
         ]
 
