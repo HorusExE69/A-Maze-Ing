@@ -316,7 +316,8 @@ def main() -> None:
 
         sleep(1)
 
-        action, is_path_visible, wall_color, motif_color, path_color = parse_menu(
+        (action, is_path_visible,
+         wall_color, motif_color, path_color) = parse_menu(
             is_path_visible,
             wall_color,
             motif_color,
