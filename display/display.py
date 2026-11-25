@@ -175,7 +175,8 @@ class Display:
         self.grid = [
             [self.chars["BORDER_CHAR"]] * width
             if y in (0, height - 1)
-            else [self.chars["BORDER_CHAR"]] + [" "] * (width - 2) +
+            else [self.chars["BORDER_CHAR"]] +
+                 [self.chars["SPACE_CHAR"]] * (width - 2) +
                  [self.chars["BORDER_CHAR"]]
             for y in range(height)
         ]

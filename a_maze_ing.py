@@ -47,6 +47,7 @@ def get_chars(
     return {
         "BORDER_CHAR": get_ansi("#", wall_color),
         "WALL_CHAR": get_ansi("@", wall_color),
+        "SPACE_CHAR": get_ansi(" "),
         "PATH_CHAR": get_ansi("○", path_color) if is_path_visible else " ",
         "MOTIF_CHAR": get_ansi("@", motif_color),
         "START_CHAR": get_ansi("S", "green"),
@@ -102,7 +103,7 @@ def display_maze(
     motif_coords: list[tuple[int, int]],
     path_str: str,
     chars: dict[str, str]
-) -> None:
+) -> list[str]:
 
     displayer = Display(
         maze.get_file,
@@ -118,6 +119,8 @@ def display_maze(
     for row in rowed_map:
         print(row)
         sleep(0.05)
+
+    return (rowed_map)
 
 
 # -------------------------
@@ -158,6 +161,11 @@ def display_menu(
 
     txt += get_ansi(
         f"5 - Change the path colour (current: {path_color})\n",
+        "bright_magenta"
+    )
+
+    txt += get_ansi(
+        "7 - Write the maze in a file\n",
         "bright_magenta"
     )
 
@@ -264,8 +272,12 @@ def parse_menu(
             return ("redraw", is_path_visible,
                     wall_color, motif_color, path_color)
 
+        elif choice == "7":
+            return ("write", is_path_visible,
+                    wall_color, motif_color, path_color)
+
         else:
-            print(get_error("Invalid choice. Please choose between 0 and 4."))
+            print(get_error("Invalid choice. Please choose between 0 and 7."))
 
 
 # -------------------------
@@ -281,9 +293,32 @@ def print_rerun() -> None:
     print()
 
 
+def clean(str_map: list[str]):
+    clean_map: list[str] = []
+    for row in str_map:
+        clean_row = ""
+        splitted_row = row.split(get_ansi(""))
+        print(splitted_row)
+        for char in splitted_row:
+            if "@" in char:
+                clean_row += "@"
+            if "#" in char:
+                clean_row += "#"
+            if "○" in char:
+                clean_row += "○"
+            if " " in char:
+                clean_row += " "
+            if "S" in char:
+                clean_row += "S"
+            if "E" in char:
+                clean_row += "E"
+        clean_map.append(clean_row)
+    return '\n'.join(clean_map)
+
 # -------------------------
 # Main
 # -------------------------
+
 
 def main() -> None:
     if len(argv) != 2:
@@ -312,7 +347,7 @@ def main() -> None:
             path_color
         )
 
-        display_maze(maze, motif_coords, path_str, chars)
+        str_map = display_maze(maze, motif_coords, path_str, chars)
 
         sleep(1)
 
@@ -331,6 +366,14 @@ def main() -> None:
             print_rerun()
 
             maze, motif_coords, path_str = generate_maze(argv[1], 1)
+
+        elif action == "write":
+            filename = input(get_ansi(
+                "In which file do you want to write the maze? ",
+                "blue"))
+
+            with open(filename, "w") as f:
+                f.write(clean(str_map))
 
 
 if __name__ == "__main__":
