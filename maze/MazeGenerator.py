@@ -331,6 +331,10 @@ class MazeGenerator:
                     else:
                         break
 
+    def randomize_seed(self) -> None:
+        self.__seed = randint(0, 2**32 - 1)
+    
+
     # Getters
 
     @property
