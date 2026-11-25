@@ -2,6 +2,7 @@ from random import choice, randint, shuffle, seed
 from sys import stderr
 from os.path import realpath
 from ansi_code import get_error
+from collections import deque
 
 
 class MazeGenerator:
@@ -362,6 +363,36 @@ class MazeGenerator:
                         self.__grid[row][col] |= bit_opp
                     else:
                         break
+
+    def solve(self) -> None:
+        queue: deque[list[int]] = deque([list(self.__entry)])
+        parent: dict[tuple[int, int], tuple[int, int]
+                     | None] = {tuple(self.__entry): None}
+
+        while queue:
+            current = queue.popleft()
+
+            if current == self.__end:
+                cell = tuple(self.__end)
+                lst: list[list[int]] = []
+                while (cell is not None):
+                    lst.append(list(cell))
+                    cell = parent[cell]
+                lst.reverse()
+                self.__path = lst
+                return
+
+            for dl, dc, bit, _ in MazeGenerator.DIRECTIONS:
+                row = current[0] + dl
+                col = current[1] + dc
+                if (
+                    0 <= row < self.__height
+                    and 0 <= col < self.__width
+                    and (self.__grid[current[0]][current[1]] & bit) == 0
+                    and (row, col) not in parent
+                ):
+                    parent[(row, col)] = tuple(current)
+                    queue.append([row, col])
 
     def randomize_seed(self) -> None:
         self.__seed = randint(0, 2**32 - 1)
