@@ -40,13 +40,14 @@ class UsageError(Exception):
 def get_chars(
     is_path_visible: bool,
     wall_color: str,
-    motif_color: str
+    motif_color: str,
+    path_color: str
 ) -> dict[str, str]:
 
     return {
         "BORDER_CHAR": get_ansi("#", wall_color),
         "WALL_CHAR": get_ansi("@", wall_color),
-        "PATH_CHAR": get_ansi("○", "blue") if is_path_visible else " ",
+        "PATH_CHAR": get_ansi("○", path_color) if is_path_visible else " ",
         "MOTIF_CHAR": get_ansi("@", motif_color),
         "START_CHAR": get_ansi("S", "green"),
         "END_CHAR": get_ansi("E", "green")
@@ -72,7 +73,8 @@ def generate_maze(
 
     maze = MazeGenerator()
     maze.parse_config(config_file)
-    maze.randomize_seed()
+    if reset_seed:
+        maze.randomize_seed()
     maze.grid_gen(motif)
     maze.check_entry_exit()
 
@@ -125,7 +127,8 @@ def display_maze(
 def display_menu(
     is_path_visible: bool,
     wall_color: str,
-    motif_color: str
+    motif_color: str,
+    path_color: str
 ) -> None:
 
     txt = get_ansi(
@@ -150,6 +153,11 @@ def display_menu(
 
     txt += get_ansi(
         f"4 - Change the 42 pattern colour (current: {motif_color})\n",
+        "bright_magenta"
+    )
+
+    txt += get_ansi(
+        f"5 - Change the path colour (current: {path_color})\n",
         "bright_magenta"
     )
 
@@ -185,11 +193,12 @@ def choose_color() -> str:
 def parse_menu(
     is_path_visible: bool,
     wall_color: str,
-    motif_color: str
-) -> tuple[str, bool, str, str]:
+    motif_color: str,
+    path_color: str
+) -> tuple[str, bool, str, str, str]:
 
     while True:
-        display_menu(is_path_visible, wall_color, motif_color)
+        display_menu(is_path_visible, wall_color, motif_color, path_color)
 
         choice = input(
             get_ansi("Which choice have you made?\t\t", "blue")
@@ -203,10 +212,12 @@ def parse_menu(
                 "green", "bold"
             ))
 
-            return "quit", is_path_visible, wall_color, motif_color
+            return ("quit", is_path_visible,
+                    wall_color, motif_color, path_color)
 
         elif choice == "1":
-            return "regenerate", is_path_visible, wall_color, motif_color
+            return ("regenerate", is_path_visible,
+                    wall_color, motif_color, path_color)
 
         elif choice == "2":
             is_path_visible = not is_path_visible
@@ -217,7 +228,8 @@ def parse_menu(
                 "green", "bold"
             ))
 
-            return "redraw", is_path_visible, wall_color, motif_color
+            return ("redraw", is_path_visible,
+                    wall_color, motif_color, path_color)
 
         elif choice == "3":
             wall_color = choose_color()
@@ -227,7 +239,8 @@ def parse_menu(
                 "green", "bold"
             ))
 
-            return "redraw", is_path_visible, wall_color, motif_color
+            return ("redraw", is_path_visible,
+                    wall_color, motif_color, path_color)
 
         elif choice == "4":
             motif_color = choose_color()
@@ -237,7 +250,19 @@ def parse_menu(
                 "green", "bold"
             ))
 
-            return "redraw", is_path_visible, wall_color, motif_color
+            return ("redraw", is_path_visible,
+                    wall_color, motif_color, path_color)
+
+        elif choice == "5":
+            path_color = choose_color()
+
+            print(get_ansi(
+                f"Path color changed to {path_color}",
+                "green", "bold"
+            ))
+
+            return ("redraw", is_path_visible,
+                    wall_color, motif_color, path_color)
 
         else:
             print(get_error("Invalid choice. Please choose between 0 and 4."))
@@ -267,6 +292,7 @@ def main() -> None:
     is_path_visible = True
     wall_color = "black"
     motif_color = "red"
+    path_color = "blue"
 
     print(get_ansi(
         "Welcome to our Amazing A-Maze-Ing!\n",
@@ -282,17 +308,19 @@ def main() -> None:
         chars = get_chars(
             is_path_visible,
             wall_color,
-            motif_color
+            motif_color,
+            path_color
         )
 
         display_maze(maze, motif_coords, path_str, chars)
 
         sleep(1)
 
-        action, is_path_visible, wall_color, motif_color = parse_menu(
+        action, is_path_visible, wall_color, motif_color, path_color = parse_menu(
             is_path_visible,
             wall_color,
-            motif_color
+            motif_color,
+            path_color
         )
 
         if action == "quit":
