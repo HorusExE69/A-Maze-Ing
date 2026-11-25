@@ -18,12 +18,12 @@ clean:
 	@find . -type f -name "*.pyc" -delete
 
 f8:
-	$(NORM) .
+	@$(NORM) .
 
 lint: f8
-	$(TYPE_CHECK) . $(TC_FLAGS)
+	@$(TYPE_CHECK) . $(TC_FLAGS)
 
 lint-strict: f8
-	$(TYPE_CHECK) . --strict
+	@$(TYPE_CHECK) . --strict
 
 .PHONY: install run debug clean lint lint-strict

@@ -54,10 +54,14 @@ ANSI_CODE: dict[str, str] = {
 }
 
 
-def get_ansi(txt: str | Exception, *args):
-    return f"{''.join(ANSI_CODE[arg] for arg in args)}"\
-           f"{txt}{ANSI_CODE['reset']}"
+def get_ansi(txt: str | Exception, *args: str) -> str:
+    if not all([type(arg) is str for arg in args]):
+        raise (ValueError(get_error("All values should be str")))
+    if not all([arg in list(ANSI_CODE.keys()) for arg in args]):
+        raise (ValueError(get_error("All values should be in ANSI_CODE")))
+    return (f"{''.join(ANSI_CODE[arg] for arg in args)}"
+            f"{txt}{ANSI_CODE['reset']}")
 
 
-def get_error(txt: str | Exception):
+def get_error(txt: str | Exception) -> str:
     return get_ansi(txt, "red", "bold")

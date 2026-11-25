@@ -1,3 +1,4 @@
+
 from random import choice, randint, shuffle
 from sys import stderr
 from os.path import realpath
@@ -7,19 +8,23 @@ from ansi_code import get_error
 class MazeGenerator:
     DIRECTIONS = ((-1, 0, 1, 4), (0, 1, 2, 8), (1, 0, 4, 1), (0, -1, 8, 2))
 
-    def __init__(self, width=50, height=50, filename="maze.txt"):
-        self.__width = width
-        self.__height = height
-        self.__grid = []
-        self.__path = []
-        self.__entry = [0, 0]
-        self.__end = [height - 1, width - 1]
-        self.__filename = filename
-        self.__perfect = True
-        self.__seed = None
+    def __init__(
+        self,
+        width: int = 50,
+        height: int = 50,
+        filename: str = "maze.txt"
+    ) -> None:
+        self.__width: int = width
+        self.__height: int = height
+        self.__grid: list[list[int]] = []
+        self.__path: list[list[int]] = []
+        self.__entry: list[int] = [0, 0]
+        self.__end: list[int] = [height - 1, width - 1]
+        self.__filename: str = filename
+        self.__perfect: bool = True
+        self.__seed: int | None = None
 
-    def grid_gen(self, motif):
-
+    def grid_gen(self, motif: list[str]) -> None:
         m_w = len(motif[0])
         m_h = len(motif)
 
@@ -42,18 +47,19 @@ class MazeGenerator:
             )
             return
 
-        for dy in range(0, m_h):
-            for dx in range(0, m_w):
+        for dy in range(m_h):
+            for dx in range(m_w):
                 if motif[dy][dx] == "#":
                     self.__grid[d_y + dy][d_x + dx] = -1
 
-    def entry_and_exit(self):
-
+    def entry_and_exit(self) -> None:
         stop = False
 
         while not stop:
-            self.__entry = [randint(0, self.__height - 1),
-                            randint(0, self.__width - 1)]
+            self.__entry = [
+                randint(0, self.__height - 1),
+                randint(0, self.__width - 1)
+            ]
             if self.__grid[self.__entry[0]][self.__entry[1]] == -1:
                 continue
             else:
@@ -62,8 +68,10 @@ class MazeGenerator:
         stop = False
 
         while not stop:
-            self.__end = [randint(0, self.__height - 1),
-                          randint(0, self.__width - 1)]
+            self.__end = [
+                randint(0, self.__height - 1),
+                randint(0, self.__width - 1)
+            ]
             if (
                 self.__grid[self.__end[0]][self.__end[1]] == -1
                 or self.__end == self.__entry
@@ -72,7 +80,7 @@ class MazeGenerator:
             else:
                 stop = True
 
-    def write_in_file(self):
+    def write_in_file(self) -> None:
         with open(self.__filename, "w", encoding="utf-8") as f:
             for i in range(len(self.__grid)):
                 f.write(
@@ -88,7 +96,7 @@ class MazeGenerator:
             f.write(f"{self.__end[1]},{self.__end[0]}\n")
 
             path_str = ""
-            for i in range(0, len(self.__path) - 1):
+            for i in range(len(self.__path) - 1):
                 dl = self.__path[i + 1][0] - self.__path[i][0]
                 dc = self.__path[i + 1][1] - self.__path[i][1]
                 if dl == -1:
@@ -102,8 +110,8 @@ class MazeGenerator:
             f.write(path_str + "\n")
         return path_str
 
-    def path_gen(self):
-        stack = [list(self.__entry)]
+    def path_gen(self) -> None:
+        stack: list[list[int]] = [list(self.__entry)]
 
         while stack:
             head = stack[-1]
@@ -111,7 +119,7 @@ class MazeGenerator:
             if head == self.__end:
                 self.__path = [list(pos) for pos in stack]
 
-            neighbors = []
+            neighbors: list[list[int]] = []
 
             for dl, dc, bit, bit_opp in MazeGenerator.DIRECTIONS:
                 row = head[0] + dl
@@ -131,14 +139,14 @@ class MazeGenerator:
             else:
                 stack.pop()
 
-    def close_motif(self):
+    def close_motif(self) -> None:
         for row in range(self.__height):
             for col in range(self.__width):
                 if self.__grid[row][col] == -1:
                     self.__grid[row][col] = 15
 
-    def parse_config(self, filename):
-        mandatory = {
+    def parse_config(self, filename: str) -> None:
+        mandatory: set[str] = {
             "WIDTH",
             "HEIGHT",
             "ENTRY",
@@ -147,7 +155,7 @@ class MazeGenerator:
             "PERFECT",
         }
         allowed = mandatory | {"SEED"}
-        seen = set()
+        seen: set[str] = set()
 
         with open(filename, "r", encoding="utf-8") as f:
             for line in f:
@@ -215,13 +223,15 @@ class MazeGenerator:
                 get_error("Output file cannot be the "
                           "same as the configuration file"))
 
-    def check_entry_exit(self):
+    def check_entry_exit(self) -> None:
         if self.__entry[0] not in range(self.__height) or \
            self.__entry[1] not in range(self.__width):
             raise ValueError(
                 get_error(f"Entry position {self.__entry} is out of bounds"))
-        elif (self.__end[0] not in range(self.__height) or
-              self.__end[1] not in range(self.__width)):
+        elif (
+            self.__end[0] not in range(self.__height)
+            or self.__end[1] not in range(self.__width)
+        ):
             raise ValueError(
                 get_error(f"Exit position {self.__end} is out of bounds"))
         elif self.__grid[self.__entry[0]][self.__entry[1]] == -1:
@@ -236,11 +246,11 @@ class MazeGenerator:
                           "are the same")
             )
 
-    def __is_dead_end(self, r, c):
+    def __is_dead_end(self, r: int, c: int) -> bool:
         value = self.__grid[r][c]
         return value != -1 and bin(value).count("1") == 3
 
-    def __is_open_square(self, r, c):
+    def __is_open_square(self, r: int, c: int) -> bool:
         if r < 0 or c < 0:
             return False
         if r + 2 >= self.__height or c + 2 >= self.__width:
@@ -267,26 +277,29 @@ class MazeGenerator:
 
         return True
 
-    def __is_in_open_square(self, r, c):
+    def __is_in_open_square(self, r: int, c: int) -> bool:
         for row in range(r - 2, r + 1):
             for col in range(c - 2, c + 1):
                 if self.__is_open_square(row, col):
                     return True
         return False
 
-    def braid(self):
+    def braid(self) -> None:
         for r in range(self.__height):
             for c in range(self.__width):
                 if not self.__is_dead_end(r, c):
                     continue
 
-                dead_neighbors = []
-                other_neighbors = []
+                dead_neighbors: list[tuple[int, int, int, int]] = []
+                other_neighbors: list[tuple[int, int, int, int]] = []
+
                 for dl, dc, bit, bit_opp in MazeGenerator.DIRECTIONS:
                     row = r + dl
                     col = c + dc
-                    if not (0 <= row < self.__height and
-                            0 <= col < self.__width):
+                    if not (
+                        0 <= row < self.__height
+                        and 0 <= col < self.__width
+                    ):
                         continue
                     if self.__grid[row][col] == -1:
                         continue
@@ -307,8 +320,10 @@ class MazeGenerator:
                     self.__grid[r][c] &= ~bit
                     self.__grid[row][col] &= ~bit_opp
 
-                    if self.__is_in_open_square(r, c) or \
-                       self.__is_in_open_square(row, col):
+                    if (
+                        self.__is_in_open_square(r, c)
+                        or self.__is_in_open_square(row, col)
+                    ):
                         self.__grid[r][c] |= bit
                         self.__grid[row][col] |= bit_opp
                     else:
@@ -317,24 +332,28 @@ class MazeGenerator:
     # Getters
 
     @property
-    def get_width(self):
+    def get_width(self) -> int:
         return self.__width
 
     @property
-    def get_height(self):
+    def get_height(self) -> int:
         return self.__height
 
     @property
-    def get_start_pos(self):
+    def get_start_pos(self) -> list[int]:
         return self.__entry
 
     @property
-    def get_end_pos(self):
+    def get_end_pos(self) -> list[int]:
         return self.__end
 
     @property
-    def get_file(self):
+    def get_file(self) -> str:
         return self.__filename
+
+    @property
+    def perfect_mode(self) -> bool:
+        return self.__perfect
 
     @property
     def get_motif_coords(self) -> list[tuple[int, int]]:
@@ -344,7 +363,3 @@ class MazeGenerator:
                 if self.__grid[y][x] == -1:
                     coords.append((x, y))
         return coords
-
-    @property
-    def perfect_mode(self):
-        return self.__perfect

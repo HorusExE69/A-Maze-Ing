@@ -6,7 +6,7 @@ from ansi_code import get_ansi, get_error
 from time import sleep
 
 
-COLORS = [
+COLORS: list[str] = [
     "black",
     "red",
     "green",
@@ -27,7 +27,7 @@ COLORS = [
 
 
 class UsageError(Exception):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             get_error("Usage: python3 a_maze_ing.py <config_file>")
         )
@@ -57,7 +57,10 @@ def get_chars(
 # Maze generation
 # -------------------------
 
-def generate_maze(config_file: str):
+def generate_maze(
+    config_file: str
+) -> tuple[MazeGenerator, list[tuple[int, int]], str]:
+
     motif = [
         "#.#.###",
         "#.#...#",
@@ -90,7 +93,13 @@ def generate_maze(config_file: str):
 # Maze display
 # -------------------------
 
-def display_maze(maze, motif_coords, path_str, chars):
+def display_maze(
+    maze: MazeGenerator,
+    motif_coords: list[tuple[int, int]],
+    path_str: str,
+    chars: dict[str, str]
+) -> None:
+
     displayer = Display(
         maze.get_file,
         maze.get_start_pos,
@@ -115,7 +124,8 @@ def display_menu(
     is_path_visible: bool,
     wall_color: str,
     motif_color: str
-):
+) -> None:
+
     txt = get_ansi(
         "\nNow that the maze just displays, you can choose further options:\n",
         "bold", "underline", "magenta"
@@ -235,7 +245,7 @@ def parse_menu(
 # Other utilities
 # -------------------------
 
-def print_rerun():
+def print_rerun() -> None:
     print(get_ansi("The program will rerun", "green", "bold"), end="")
 
     for _ in range(3):
@@ -248,7 +258,7 @@ def print_rerun():
 # Main
 # -------------------------
 
-def main():
+def main() -> None:
     if len(argv) != 2:
         raise UsageError()
 
