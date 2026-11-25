@@ -1,13 +1,3 @@
-from ansi_code import get_ansi
-
-# Char constants
-BORDER_CHAR = get_ansi("#", "black")
-WALL_CHAR = get_ansi("@", "black")
-MOTIF_CHAR = get_ansi("@", "red")
-PATH_CHAR = get_ansi("○", "blue")
-START_CHAR = get_ansi("S", "green")
-END_CHAR = get_ansi("E", "green")
-
 # Types definitions
 Cell = dict[str, bool]
 Grid = list[list[str]]
@@ -67,6 +57,7 @@ class Display:
         end: Point | list[int],
         motif_coords: list[Point],
         path: str,
+        chars: dict[str, str]
     ) -> None:
         self.filename = filename
         self.start = start
@@ -75,6 +66,7 @@ class Display:
         self.hints: list[list[Cell]] = []
         self.grid: Grid = []
         self.path = path
+        self.chars = chars
 
     @property
     def width(self) -> int:
@@ -168,7 +160,7 @@ class Display:
             if not (0 <= ny < len(self.grid) and 0 <= nx < len(self.grid[ny])):
                 return False
 
-            if self.grid[ny][nx] != WALL_CHAR:
+            if self.grid[ny][nx] != self.chars["WALL_CHAR"]:
                 return False
 
         return True
@@ -178,9 +170,9 @@ class Display:
         width, height = self.width, self.height
 
         self.grid = [
-            [BORDER_CHAR] * width
+            [self.chars["BORDER_CHAR"]] * width
             if y in (0, height - 1)
-            else [BORDER_CHAR] + [" "] * (width - 2) + [BORDER_CHAR]
+            else [self.chars["BORDER_CHAR"]] + [" "] * (width - 2) + [self.chars["BORDER_CHAR"]]
             for y in range(height)
         ]
 
@@ -190,8 +182,8 @@ class Display:
         sx, sy = to_grid(*self.start)
         ex, ey = to_grid(*self.end)
 
-        self.grid[sy][sx] = START_CHAR
-        self.grid[ey][ex] = END_CHAR
+        self.grid[sy][sx] = self.chars["START_CHAR"]
+        self.grid[ey][ex] = self.chars["END_CHAR"]
 
     def fill_map(self) -> None:
         """Fill the grid with the parsed seed."""
@@ -202,7 +194,7 @@ class Display:
                 # Sides
                 for name, (dx, dy) in OFFSETS.items():
                     if hint[name]:
-                        self.grid[cy + dy][cx + dx] = WALL_CHAR
+                        self.grid[cy + dy][cx + dx] = self.chars["WALL_CHAR"]
 
         for y in range(0, self.height, 2):
             for x in range(0, self.width, 2):
@@ -210,8 +202,8 @@ class Display:
                     if not (0 <= y + dy < self.height and
                             0 <= x + dx < self.width):
                         continue
-                    if self.grid[y + dy][x + dx] == WALL_CHAR:
-                        self.grid[y][x] = WALL_CHAR
+                    if self.grid[y + dy][x + dx] == self.chars["WALL_CHAR"]:
+                        self.grid[y][x] = self.chars["WALL_CHAR"]
                         break
 
     def draw_path(self) -> None:
@@ -228,8 +220,8 @@ class Display:
                     new_x += 1
                 if char == 'W':
                     new_x -= 1
-                if self.grid[new_y][new_x] != END_CHAR:
-                    self.grid[new_y][new_x] = PATH_CHAR
+                if self.grid[new_y][new_x] != self.chars["END_CHAR"]:
+                    self.grid[new_y][new_x] = self.chars["PATH_CHAR"]
 
     def draw_motif(self) -> None:
         """Paint motif's walls in red."""
@@ -246,15 +238,15 @@ class Display:
                     continue
 
                 if self.grid[ny][nx] in (
-                    BORDER_CHAR,
-                    START_CHAR,
-                    END_CHAR,
+                    self.chars["BORDER_CHAR"],
+                    self.chars["START_CHAR"],
+                    self.chars["END_CHAR"],
                 ):
                     continue
 
-                self.grid[ny][nx] = MOTIF_CHAR
+                self.grid[ny][nx] = self.chars["MOTIF_CHAR"]
 
-    def display_map(self) -> None:
+    def get_map(self) -> list[str]:
         """Parse the seed, format and display the maze."""
         self.parse_file()
         self.validate_hints()
@@ -263,5 +255,4 @@ class Display:
         self.draw_motif()
         self.draw_path()
 
-        for row in self.grid:
-            print("".join(row))
+        return ["".join(row) for row in self.grid]

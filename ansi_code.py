@@ -57,3 +57,6 @@ ANSI_CODE: dict[str, str] = {
 def get_ansi(txt: str, *args):
     return f"{''.join(ANSI_CODE[arg] for arg in args)}"\
            f"{txt}{ANSI_CODE['reset']}"
+
+def get_error(txt: str):
+    return get_ansi(txt, "red", "bold")
