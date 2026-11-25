@@ -61,7 +61,8 @@ def get_chars(
 
 def generate_maze(
     config_file: str,
-    reset_seed: int
+    reset_seed: int,
+    overrides: dict[str, str] | None = None
 ) -> tuple[MazeGenerator, list[tuple[int, int]], str]:
 
     motif = [
@@ -74,7 +75,9 @@ def generate_maze(
 
     maze = MazeGenerator()
     maze.parse_config(config_file)
-    if reset_seed:
+    if overrides:
+        maze.custom_config(**overrides)
+    if reset_seed and not (overrides and "SEED" in overrides):
         maze.randomize_seed()
     maze.grid_gen(motif)
     maze.check_entry_exit()
@@ -165,6 +168,11 @@ def display_menu(
     )
 
     txt += get_ansi(
+        "6 - Re-generate a maze with a custom configuration\n",
+        "bright_magenta"
+    )
+
+    txt += get_ansi(
         "7 - Write the maze in a file\n",
         "bright_magenta"
     )
@@ -196,6 +204,27 @@ def choose_color() -> str:
             return choice
 
         print(get_error("Invalid color. Try again."))
+
+
+def ask_custom_config(maze: MazeGenerator) -> dict[str, str]:
+    start = maze.get_start_pos
+    fields = [
+        ("WIDTH", "Width", str(maze.get_width)),
+        ("HEIGHT", "Height", str(maze.get_height)),
+        ("ENTRY", "Entry (x,y)", f"{start[1]},{start[0]}"),
+        ("EXIT", "Exit (x,y)", "Width - 1, Height - 1"),
+        ("PERFECT", "Perfect (True/False)", str(maze.perfect_mode)),
+        ("SEED", "Seed (empty = random)", ""),
+    ]
+
+    print(get_ansi("Custom config (empty = keep current value)",
+                   "bold", "cyan"))
+    overrides: dict[str, str] = {}
+    for key, label, current in fields:
+        value = input(get_ansi(f"{label} [{current}]: ", "blue")).strip()
+        if value:
+            overrides[key] = value
+    return overrides
 
 
 def parse_menu(
@@ -272,6 +301,10 @@ def parse_menu(
             return ("redraw", is_path_visible,
                     wall_color, motif_color, path_color)
 
+        elif choice == "6":
+            return ("custom", is_path_visible,
+                    wall_color, motif_color, path_color)
+
         elif choice == "7":
             return ("write", is_path_visible,
                     wall_color, motif_color, path_color)
@@ -293,12 +326,11 @@ def print_rerun() -> None:
     print()
 
 
-def clean(str_map: list[str]):
+def clean(str_map: list[str]) -> str:
     clean_map: list[str] = []
     for row in str_map:
         clean_row = ""
         splitted_row = row.split(get_ansi(""))
-        print(splitted_row)
         for char in splitted_row:
             if "@" in char:
                 clean_row += "@"
@@ -374,6 +406,16 @@ def main() -> None:
 
             with open(filename, "w") as f:
                 f.write(clean(str_map))
+
+        elif action == "custom":
+            overrides = ask_custom_config(maze)
+            try:
+                maze, motif_coords, path_str = generate_maze(
+                    argv[1], 1, overrides
+                )
+                print_rerun()
+            except (OSError, ValueError) as e:
+                print(get_error(f"Error: {e}"), file=stderr)
 
 
 if __name__ == "__main__":
