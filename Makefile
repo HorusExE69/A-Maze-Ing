@@ -7,6 +7,9 @@ DEFAULT_CONFIG = config.txt
 install:
 	pip3 install -r requirements.txt
 
+uninstall:
+	pip3 uninstall --yes -r requirements.txt
+
 run:
 	@python3 $(SCRIPT) $(DEFAULT_CONFIG)
 
