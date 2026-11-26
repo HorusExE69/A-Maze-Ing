@@ -5,16 +5,16 @@ SCRIPT = a_maze_ing.py
 DEFAULT_CONFIG = config.txt
 
 install:
-	pip3 install -r requirements.txt
+	@pip3 install -r requirements.txt
 
 uninstall:
-	pip3 uninstall --yes -r requirements.txt
+	@pip3 uninstall --yes -r requirements.txt
 
 run:
 	@python3 $(SCRIPT) $(DEFAULT_CONFIG)
 
 debug:
-	python3 -m pdb $(SCRIPT) $(DEFAULT_CONFIG)
+	@python3 -m pdb $(SCRIPT) $(DEFAULT_CONFIG)
 
 clean:
 	@find . -type d \( -name "__pycache__" -o -name ".mypy_cache" -o -name ".pytest_cache" \) -prune -exec rm -rf {} +
