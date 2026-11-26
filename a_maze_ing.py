@@ -88,6 +88,7 @@ def generate_maze(
 
     if not maze.perfect_mode:
         maze.braid()
+        maze.solve()
 
     maze.close_motif()
     maze.write_in_file()
