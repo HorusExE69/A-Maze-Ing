@@ -365,34 +365,39 @@ class MazeGenerator:
                         break
 
     def solve(self) -> None:
-        queue: deque[list[int]] = deque([list(self.__entry)])
+        ex, ey = self.__entry
+        end_r, end_c = self.__end
+        end: tuple[int, int] = (end_r, end_c)
+
+        queue: deque[tuple[int, int]] = deque([(ex, ey)])
         parent: dict[tuple[int, int], tuple[int, int]
-                     | None] = {tuple(self.__entry): None}
+                     | None] = {(ex, ey): None}
 
         while queue:
             current = queue.popleft()
+            cr, cc = current
 
-            if current == self.__end:
-                cell = tuple(self.__end)
+            if current == end:
+                cell: tuple[int, int] | None = end
                 lst: list[list[int]] = []
-                while (cell is not None):
-                    lst.append(list(cell))
+                while cell is not None:
+                    lst.append([cell[0], cell[1]])
                     cell = parent[cell]
                 lst.reverse()
                 self.__path = lst
                 return
 
             for dl, dc, bit, _ in MazeGenerator.DIRECTIONS:
-                row = current[0] + dl
-                col = current[1] + dc
+                row = cr + dl
+                col = cc + dc
                 if (
                     0 <= row < self.__height
                     and 0 <= col < self.__width
-                    and (self.__grid[current[0]][current[1]] & bit) == 0
+                    and (self.__grid[cr][cc] & bit) == 0
                     and (row, col) not in parent
                 ):
-                    parent[(row, col)] = tuple(current)
-                    queue.append([row, col])
+                    parent[(row, col)] = current
+                    queue.append((row, col))
 
     def randomize_seed(self) -> None:
         self.__seed = randint(0, 2**32 - 1)
